@@ -1,0 +1,13 @@
+---
+###############################################################################
+# Firefly Handlers
+###############################################################################
+
+- name: 'restart nginx-fpm'
+  ansible.builtin.systemd:
+    name:    '{{ item }}'
+    state:   'restarted'
+    enabled: true
+  loop:
+    - 'nginx'
+    - 'php{{ firefly_php_version }}-fpm'

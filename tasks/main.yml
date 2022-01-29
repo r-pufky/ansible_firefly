@@ -1,0 +1,7 @@
+---
+- ansible.builtin.import_tasks: core.yml
+- ansible.builtin.import_tasks: composer.yml
+- ansible.builtin.import_tasks: nginx.yml
+- ansible.builtin.import_tasks: install.yml
+- ansible.builtin.import_tasks: database.yml
+- ansible.builtin.import_tasks: remove_old.yml

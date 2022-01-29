@@ -1,0 +1,27 @@
+---
+###############################################################################
+# PHP Composer Install
+###############################################################################
+# This is required for community.general.composer; and needed for firefly
+# package management.
+#
+# Requires:
+# * php installed on system.
+
+- name: 'composer | check composer status'
+  ansible.builtin.stat:
+    path: '/usr/local/bin/composer'
+  register: _firefly_composer
+
+- name: 'composer | copy composer installer to /tmp'
+  ansible.builtin.copy:
+    src:   'composer_installer'
+    dest:  '/tmp/installer'
+    owner: 'root'
+    group: 'root'
+    mode:  0700
+  when: not _firefly_composer.stat.exists
+
+- name: 'composer | install composer'
+  ansible.builtin.command: '/usr/bin/php -f /tmp/installer -- --install-dir=/usr/local/bin --filename=composer'
+  when: not _firefly_composer.stat.exists

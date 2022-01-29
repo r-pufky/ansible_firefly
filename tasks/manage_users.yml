@@ -1,0 +1,48 @@
+---
+###############################################################################
+# Manager Firefly Users
+###############################################################################
+# Check if user exists and create if enabled.
+#
+# Args:
+#   firefly_user: string firefly username.
+#   firefly_group: string firefly group.
+#   firefly_create_user: boolean true to create role default user.
+#   firefly_default_user: dict containing builitin.user options for firefly.
+#   firefly_default_group: dict containing builitin.group options for firefly.
+
+- name: 'manage users | confirm user exists'
+  ansible.builtin.command: 'id {{ firefly_user }}'
+  register: _firefly_user_exists
+  changed_when: _firefly_user_exists.rc > 0
+  failed_when: false
+
+- name: 'manage users | confirm group exists'
+  ansible.builtin.command: 'groups {{ firefly_group }}'
+  register: _firefly_group_exists
+  changed_when: _firefly_group_exists.rc > 0
+  failed_when: false
+
+- name: 'manage users | create firefly group'
+  ansible.builtin.group:
+    name:  '{{ firefly_default_group.name }}'
+    gid:   '{{ firefly_default_group.gid }}'
+    state: 'present'
+  when: firefly_create_user and _firefly_group_exists.rc != 0
+
+- name: 'manage users | create firefly user (logins disabled)'
+  ansible.builtin.user:
+    name:            '{{ firefly_default_user.name }}'
+    group:           '{{ firefly_default_user.group }}'
+    uid:             '{{ firefly_default_user.uid }}'
+    shell:           '{{ firefly_default_user.shell }}'
+    home:            '{{ firefly_default_user.home }}'
+    create_home:     '{{ firefly_default_user.create_home }}'
+    comment:         '{{ firefly_default_user.comment }}'
+    password:        '{{ firefly_default_user.password }}'
+    password_lock:   '{{ firefly_default_user.password_lock }}'
+    update_password: '{{ firefly_default_user.update_password }}'
+    expires:         '{{ firefly_default_user.expires }}'
+    system:          '{{ firefly_default_user.system }}'
+    state:           'present'
+  when: firefly_create_user and _firefly_user_exists.rc != 0

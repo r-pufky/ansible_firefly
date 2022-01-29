@@ -1,0 +1,72 @@
+---
+###############################################################################
+# Artisan Database Install
+###############################################################################
+#
+# Reference:
+# * https://docs.firefly-iii.org/firefly-iii/installation/self_hosted/
+# * https://docs.firefly-iii.org/firefly-iii/installation/upgrade/
+
+- name: 'database | new database setup'
+  block:
+    - name: 'database | new database setup (data destructive). Abort if existing database.'
+      ansible.builtin.pause:
+        seconds: 5
+        echo: false
+
+    # Data destructive. Do not use on existing db's with first install.
+    - name: 'database | rollback and re-create all database migrations'
+      ansible.builtin.command: '/usr/bin/php artisan migrate:refresh --seed'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | upgrade database'
+      ansible.builtin.command: '/usr/bin/php artisan firefly-iii:upgrade-database'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | enable passport support (Oauth2)'
+      ansible.builtin.command: '/usr/bin/php artisan passport:install'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+  when: firefly_create_database
+
+- name: 'database | migrate database setup'
+  block:
+    - name: 'database | clear bootstrap cache' # noqa deprecated-command-syntax single rm command versus multi-stage file globbing
+      ansible.builtin.command: 'rm -rf {{ _firefly_versioned_install_dir }}/bootstrap/cache/* }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | clear cachei'
+      ansible.builtin.command: '/usr/bin/php artisan cache:clear'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | migrate database'
+      ansible.builtin.command: '/usr/bin/php artisan migrate --seed'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | upgrade database'
+      ansible.builtin.command: '/usr/bin/php artisan firefly-iii:upgrade-database'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | enable passport support (Oauth2)'
+      ansible.builtin.command: '/usr/bin/php artisan passport:install'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+
+    - name: 'database | clear upgrading cache'
+      ansible.builtin.command: '/usr/bin/php artisan cache:clear'
+      args:
+        chdir: '{{ _firefly_versioned_install_dir }}'
+      notify: 'restart nginx-fpm'
+  when: not _firefly_install_stat.stat.exists

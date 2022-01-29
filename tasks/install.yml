@@ -1,0 +1,68 @@
+---
+###############################################################################
+# Install Dependencies for Firefly III
+###############################################################################
+# Facts:
+#   _firefly_target_version
+#   _firefly_versioned_install_dir
+#   _firefly_install_dir
+#
+# Reference:
+# * https://computingforgeeks.com/setup-firefly-personal-finance-manager-on-ubuntu/
+# * https://docs.firefly-iii.org/firefly-iii/installation/self_hosted/
+# * https://docs.firefly-iii.org/firefly-iii/installation/upgrade/
+# * https://r-pufky.github.io/docs/services/firefly/index.html
+
+- name: 'install | check install status'
+  ansible.builtin.stat:
+    path: '{{ _firefly_versioned_install_dir }}'
+  register: _firefly_install_stat
+
+- name: 'install | set logrotate'
+  ansible.builtin.copy:
+    src:   'firefly-iii.logrotate'
+    dest:  '/etc/logrotate.d/firefly-iii'
+    owner: 'root'
+    group: 'root'
+    mode:  0644
+
+- name: 'install | install new version'
+  block:
+    - name: 'install | install'
+      community.general.composer:
+        command:     'create-project'
+        arguments:   'grumpydictator/firefly-iii {{ _firefly_versioned_install_dir }} {{ _firefly_target_version }}'
+        working_dir: '/var/www/html'
+        prefer_dist: true
+        no_dev:      true
+      notify: 'restart nginx-fpm'
+
+    - ansible.builtin.include_tasks: storage.yml
+
+    - name: 'install | set ownership'
+      ansible.builtin.file:
+        path:    '{{ _firefly_versioned_install_dir }}'
+        owner:   '{{ firefly_user }}'
+        group:   '{{ firefly_group }}'
+        state:   'directory'
+        recurse: true
+      notify: 'restart nginx-fpm'
+
+    - name: 'install | link to current'
+      ansible.builtin.file:
+        src:   '{{ _firefly_versioned_install_dir }}'
+        dest:  '{{ _firefly_install_dir }}'
+        owner: '{{ firefly_user }}'
+        group: '{{ firefly_group }}'
+        state: 'link'
+      notify: 'restart nginx-fpm'
+  when: not _firefly_install_stat.stat.exists
+
+- name: 'install | set config'
+  ansible.builtin.template:
+    src:   'firefly.env.j2'
+    dest:  '{{ _firefly_versioned_install_dir }}/.env'
+    owner: '{{ firefly_user }}'
+    group: '{{ firefly_group }}'
+    mode:  0640
+  notify: 'restart nginx-fpm'

@@ -1,0 +1,60 @@
+---
+###############################################################################
+# Default Firefly Package Dependencies
+###############################################################################
+# Default required packages for firefly install.
+
+# php version used in config paths.
+firefly_php_version: '8.0'
+
+firefly_default_packages:
+  - 'gnupg2'
+  - 'nginx'
+  - 'curl'
+
+firefly_default_php_packages:
+  - 'php{{ firefly_php_version }}'
+  - 'php{{ firefly_php_version }}-cli'
+  - 'php{{ firefly_php_version }}-zip'
+  - 'php{{ firefly_php_version }}-gd'
+  - 'php{{ firefly_php_version }}-fpm'
+  - 'php{{ firefly_php_version }}-common'
+  - 'php{{ firefly_php_version }}-pgsql'
+  - 'php{{ firefly_php_version }}-zip'
+  - 'php{{ firefly_php_version }}-mbstring'
+  - 'php{{ firefly_php_version }}-curl'
+  - 'php{{ firefly_php_version }}-xml'
+  - 'php{{ firefly_php_version }}-bcmath'
+  - 'php{{ firefly_php_version }}-imap'
+  - 'php{{ firefly_php_version }}-ldap'
+  - 'php{{ firefly_php_version }}-intl'
+
+###############################################################################
+# Default Firefly User Group
+###############################################################################
+# Default group settings if an firefly user is force created.
+
+firefly_default_group:
+  name: 'www-data'
+  gid:  33
+
+###############################################################################
+# Default Firefly User Account
+###############################################################################
+# Default user settings if an firefly user is force created.
+#
+# Logins are disabled.
+
+firefly_default_user:
+  name:            'www-data'
+  group:           'www-data'
+  uid:             33
+  shell:           '/usr/sbin/nologin'
+  home:            '/var/www'
+  comment:         'www-data'
+  create_home:     false
+  password:        '!'
+  password_lock:   true
+  update_password: 'always'
+  expires:         -1
+  system:          true

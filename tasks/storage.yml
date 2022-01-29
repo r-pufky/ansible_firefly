@@ -1,0 +1,36 @@
+---
+###############################################################################
+# Link Data Storage
+###############################################################################
+#
+# Facts:
+#   _firefly_versioned_install_dir
+
+- name: 'storage | link data storage'
+  block:
+    - name: 'storage | remove storage template directories'
+      ansible.builtin.file:
+        dest:  '{{ _firefly_versioned_install_dir }}/storage/{{ item }}'
+        state: 'absent'
+      loop:
+        - 'export'
+        - 'upload'
+
+    - name: 'storage | link storage mounts'
+      ansible.builtin.file:
+        src:   '{{ firefly_link_storage }}/{{ item }}'
+        dest:  '{{ _firefly_versioned_install_dir }}/storage/{{ item }}'
+        owner: '{{ firefly_user }}'
+        group: '{{ firefly_group }}'
+        state: 'link'
+      loop:
+        - 'export'
+        - 'upload'
+  when: firefly_link_storage|length > 0
+
+- name: 'storage | set permissions'
+  ansible.builtin.file:
+    path:    '{{ _firefly_versioned_install_dir }}/storage'
+    mode:    0775
+    state:   'directory'
+    recurse: true
