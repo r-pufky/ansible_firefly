@@ -22,6 +22,6 @@
     path:  '{{ item.path }}'
     state: 'absent'
   loop: '{{ _firefly_existing_installs.files }}'
-  when: |
+  when: >
     _firefly_target_version != item.path.split("-")[-1] and
     firefly_delete_old_versions

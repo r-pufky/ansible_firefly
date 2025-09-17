@@ -41,4 +41,5 @@ Associate pull requests with a submitted bug.
 [AGPL-3.0 License](https://github.com/r-pufky/ansible_firefly/blob/main/LICENSE)
 
 ## Author Information
-https://keybase.io/rpufky
+https://github.com/r-pufky
+https://keys.openpgp.org/vks/v1/by-fingerprint/466EEC2B67516C7117C85CE3A0BC35D16698BAB9

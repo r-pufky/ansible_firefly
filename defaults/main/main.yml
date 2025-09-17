@@ -2,7 +2,7 @@
 ###############################################################################
 # Firefly III Configuration
 ###############################################################################
-# Requires Debian bullseye (for php7.4 dependencies).
+# Requires a minimum of 512MB RAM.
 #
 # Reference:
 # * https://computingforgeeks.com/setup-firefly-personal-finance-manager-on-ubuntu/
