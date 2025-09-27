@@ -1,0 +1,60 @@
+---
+###############################################################################
+# Network
+###############################################################################
+
+# List of trusted proxies.
+#
+# Used with reverse proxies.
+#
+# Special Case:
+#    *: Simple wildcard (match all domains - {IP/hostname}).
+#   **: Recursive wildcard (match all domain/paths - {IP/hostname}/path/).
+#
+# Values:
+#     {IP}: IP address trust.
+#   {HOST}: Hostname to trust.
+#
+# Default: [] (no trust).
+firefly_cfg_network_trusted_proxies: []
+
+# Application URL.
+#
+# Match external URL of Firefly III installation. Used to validate specific
+# requests and generate URLs in emails.
+#
+# Default: 'http://localhost'.
+firefly_cfg_network_app_url: 'http://localhost'
+
+# Valid URL protocols.
+#
+# Some objects have room for an URL, like transactions and webhooks.
+#
+# Values:
+#   []: Allow http, https, ftp, ftps, mailto.
+#    *: Explicit allow only specific protocols.
+#
+# firefly_cfg_network_valid_url_protocols:
+#   - 'https'
+#   - 'ftps'
+#
+# Default: [] (use default protocols).
+firefly_cfg_network_valid_url_protocols: []
+
+# Disable X-Frame-Options header?
+#
+# Applications running in frames run the risk of leaking information to their
+# parent frame.
+#
+# Default: False.
+firefly_cfg_network_disable_frame_header: false
+
+# Disable Content Security Policy (CSP) header?
+#
+# Security risk of not being able to stop XSS bugs should they ever surface.
+#
+# Default: False.
+firefly_cfg_network_disable_csp_header: false
+
+# Enable webhooks? Default: False.
+firefly_cfg_network_allow_webhooks: false

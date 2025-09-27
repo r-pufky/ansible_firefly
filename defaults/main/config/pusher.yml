@@ -1,0 +1,20 @@
+---
+###############################################################################
+# Pusher
+###############################################################################
+# Requires firefly_cfg_app_broadcast_driver=pusher.
+#
+# Reference:
+# * https://pusher.com/
+
+# Pusher ID. Default: '' (disabled).
+firefly_cfg_pusher_id: ''
+
+# Pusher key. Default: '' (disabled).
+firefly_cfg_pusher_key: ''
+
+# Pusher token. Default: '' (disabled).
+firefly_cfg_pusher_token: ''
+
+# Pusher secret. Default: '' (disabled).
+firefly_cfg_pusher_secret: ''

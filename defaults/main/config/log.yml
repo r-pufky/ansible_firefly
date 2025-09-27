@@ -1,0 +1,85 @@
+---
+###############################################################################
+# Logging
+###############################################################################
+
+# Log channel.
+#
+# Values:
+#       single: Use single file in storage/logs (not recommended).
+#       syslog: Use syslog.
+#     errorlog: Use web server errorlog (NGINX).
+#       stdout: Use stdout.
+#        daily: Use files in storage/logs, rotated daily, keeping last 5.
+#        stack: Use stdout + daily (default).
+#   papertrail: Use papertrail. See firefly_cfg_log_papertrail_host,
+#               firefly_cfg_log_papertrail_port.
+#        slack: Use slack. Requires UI configuration.
+#
+# Default: 'stack'.
+firefly_cfg_log_log_channel: 'stack'
+
+# Log level.
+#
+# Values:
+#   emergency: Emergencies only. Likely will never log anything.
+#       alert: emergency + alerts.
+#    critical: alert + critical errors.
+#       error: critical + normal errors.
+#     warning: error + warnings.
+#      notice: warnings + noticies (default).
+#        info: notice + informational messages.
+#       debug: info + debug messages.
+#
+# Default: 'notice'.
+firefly_cfg_log_app_log_level: 'notice'
+
+# Audit log level.
+#
+# These log entries may contain sensitive financial information.
+#
+# Values:
+#   emergency: Do not store audit logs (default).
+#       alert: emergency + alerts.
+#    critical: alert + critical errors.
+#       error: critical + normal errors.
+#     warning: error + warnings.
+#      notice: warnings + notices.
+#        info: notice + informational messages.
+#       debug: info + debug messages.
+#
+# Default: 'emergency' (disable).
+firefly_cfg_log_audit_log_level: 'emergency'
+
+# Audit log channel.
+#
+# Values:
+#       audit_stdout: Use stdout.
+#       audit_syslog: Use syslog.
+#     audit_errorlog: Use web server errorlog (NGINX).
+#        audit_daily: Use files in storage/logs, rotated daily, keeping last 5.
+#   audit_papertrail: Use papertrail; audit logs will be mixed with normal
+#                     logs. See firefly_cfg_log_papertrail_host,
+#                     firefly_cfg_log_papertrail_port.
+#                 '': Do not redirect audit logs (default).
+#
+# Default: '' (no redirection).
+firefly_cfg_log_audit_log_channel: ''
+
+# Papertrail host.
+#
+# Requires
+# * firefly_cfg_log_log_channel=papertrail
+# * firefly_cfg_log_audit_log_channel=papertrail
+#
+# Default: ''.
+firefly_cfg_log_papertrail_host: ''
+
+# Papertrail port.
+#
+# Requires
+# * firefly_cfg_log_log_channel=papertrail
+# * firefly_cfg_log_audit_log_channel=papertrail
+#
+# Default: ''.
+firefly_cfg_log_papertrail_port: 514

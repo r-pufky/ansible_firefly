@@ -1,0 +1,408 @@
+---
+# yamllint disable rule:line-length
+###############################################################################
+# Assert
+###############################################################################
+# Sanity check options to stop preventable errors.
+
+- name: 'Prep | assert different backup and storage locations'
+  ansible.builtin.assert:
+    quiet: true
+    that: firefly_srv_backup_dir != firefly_srv_storage_dir
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │         Backup and Storage directories must be different.         │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_srv_backup_dir: {{ firefly_srv_backup_dir }}
+      │ firefly_srv_storage_dir: {{ firefly_srv_storage_dir }}
+
+- name: 'Prep | assert consistency requirements'
+  when: >
+    firefly_cfg_app_cache_driver | lower in ['redis', 'memcached'] or
+    firefly_cfg_app_session_driver | lower in ['redis', 'memcached']
+  ansible.builtin.assert:
+    quiet: true
+    that: firefly_cfg_app_cache_driver == firefly_cfg_app_session_driver
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │              Requirements not met: Cache consistency              │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Redis and memcached must use the same cache and session drivers.
+      │
+      │ firefly_cfg_app_cache_driver: {{ firefly_cfg_app_cache_driver }}
+      │ firefly_cfg_app_session_driver: {{ firefly_cfg_app_session_driver }}
+
+- name: 'Prep | assert third party authenticators'
+  when: firefly_cfg_auth_authentication_guard | lower == 'remote_user_guard'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_auth_authentication_guard_header | length > 0
+      - firefly_cfg_auth_authentication_guard_email | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │            Requirements not met: Authentication Guard             │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Third party authenticators require header, email set.
+      │
+      │ firefly_cfg_auth_authentication_guard_header: {{ firefly_cfg_auth_authentication_guard_header }}
+      │ firefly_cfg_auth_authentication_guard_email: {{ firefly_cfg_auth_authentication_guard_email }}
+
+- name: 'Prep | assert database encryption key'
+  ansible.builtin.assert:
+    quiet: true
+    that: firefly_cfg_db_app_key | length == 32
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │           Requirements not met: Database encryption key           │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Database encryption key must be 32 characters/bytes.
+      │
+      │ firefly_cfg_db_app_key: {{ firefly_cfg_db_app_key }}
+
+- name: 'Prep | assert no sqlite unix sockets'
+  when: firefly_cfg_db_socket | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_db_connection | lower != 'sqlite'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │            Requirements not met: Database unix sockets            │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Unix sockets are not supported for sqlite3.
+      │
+      │ firefly_cfg_db_connection: {{ firefly_cfg_db_connection }}
+      │ firefly_cfg_db_socket: {{ firefly_cfg_db_socket }}
+
+- name: 'Prep | assert database host ports'
+  when: >
+    firefly_cfg_db_socket | length == 0 and
+    firefly_cfg_db_connection != 'sqlite'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_db_host | length > 0
+      - firefly_cfg_db_port > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │            Requirements not met: Database host ports              │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Database (mysql, pgsql) require host, port when not using sockets.
+      │
+      │ firefly_cfg_db_connection: {{ firefly_cfg_db_connection }}
+      │ firefly_cfg_db_host: {{ firefly_cfg_db_host }}
+      │ firefly_cfg_db_port: {{ firefly_cfg_db_port }}
+      │ firefly_cfg_db_socket: {{ firefly_cfg_db_socket }}
+
+- name: 'Prep | assert database requirements'
+  when: firefly_cfg_db_connection | lower != 'sqlite'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_db_host | length > 0
+      - firefly_cfg_db_port > 0
+      - firefly_cfg_db_database | length > 0
+      - firefly_cfg_db_username | length > 0
+      - firefly_cfg_db_password | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │             Requirements not met: Database connection             │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Database requires all connection options set.
+      │
+      │ firefly_cfg_db_connection: {{ firefly_cfg_db_connection }}
+      │ firefly_cfg_db_host: {{ firefly_cfg_db_host }}
+      │ firefly_cfg_db_port: {{ firefly_cfg_db_port }}
+      │ firefly_cfg_db_database: {{ firefly_cfg_db_database }}
+      │ firefly_cfg_db_username: {{ firefly_cfg_db_username }}
+      │ firefly_cfg_db_password: {{ firefly_cfg_db_password }}
+
+- name: 'Prep | assert mysql SSL CA'
+  when: firefly_cfg_db_mysql_ssl_ca | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_mysql_ssl_ca.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                Requirements not met: MySql SSL CA                 │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_mysql_ssl_ca must be a source file from controller,
+      │ NOT a directory.
+      │
+      │ firefly_cfg_db_mysql_ssl_ca: {{ firefly_cfg_db_mysql_ssl_ca }}
+
+- name: 'Prep | assert mysql SSL certificate'
+  when: firefly_cfg_db_mysql_ssl_cert | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_mysql_ssl_cert.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │            Requirements not met: MySql SSL certificate            │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_mysql_ssl_cert must be a source file from
+      │ controller, NOT a directory.
+      │
+      │ firefly_cfg_db_mysql_ssl_cert: {{ firefly_cfg_db_mysql_ssl_cert }}
+
+- name: 'Prep | assert mysql SSL certificate'
+  when: firefly_cfg_db_mysql_ssl_key | length > 0
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_mysql_ssl_key.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                Requirements not met: MySql SSL key                │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_mysql_ssl_key must be a source file from
+      │ controller, NOT a directory.
+      │
+      │ firefly_cfg_db_mysql_ssl_key: {{ firefly_cfg_db_mysql_ssl_key }}
+
+- name: 'Prep | assert PostgresQL SSL root certificate'
+  when: firefly_cfg_db_pgsql_ssl_root_cert != 'null'
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_pgsql_ssl_root_cert.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │       Requirements not met: PostgresQL SSL root certificate       │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_pgsql_ssl_root_cert must be a source file from
+      │ controller, NOT a directory.
+      │
+      │ firefly_cfg_db_pgsql_ssl_root_cert: {{ firefly_cfg_db_pgsql_ssl_root_cert }}
+
+- name: 'Prep | assert PostgresQL SSL certificate'
+  when: firefly_cfg_db_pgsql_ssl_cert != 'null'
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_pgsql_ssl_cert.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │         Requirements not met: PostgresQL SSL certificate          │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_pgsql_ssl_cert must be a source file from
+      │ controller, NOT a directory.
+      │
+      │ firefly_cfg_db_pgsql_ssl_cert: {{ firefly_cfg_db_pgsql_ssl_cert }}
+
+- name: 'Prep | assert PostgresQL SSL certificate key'
+  when: firefly_cfg_db_pgsql_ssl_key != 'null'
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_pgsql_ssl_key.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │       Requirements not met: PostgresQL SSL certificate key        │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_pgsql_ssl_key must be a source file from
+      │ controller, NOT a directory.
+      │
+      │ firefly_cfg_db_pgsql_ssl_key: {{ firefly_cfg_db_pgsql_ssl_key }}
+
+- name: 'Prep | assert PostgresQL SSL CRL certificate'
+  when: firefly_cfg_db_pgsql_ssl_crl_file != 'null'
+  ansible.builtin.assert:
+    quiet: true
+    that: not firefly_cfg_db_pgsql_ssl_crl_file.endswith('/')
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │       Requirements not met: PostgresQL SSL CRL certificate        │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ firefly_cfg_db_pgsql_ssl_crl_file must be a source file from
+      │ controller, NOT a directory.
+      │
+      │ firefly_cfg_db_pgsql_ssl_crl_file: {{ firefly_cfg_db_pgsql_ssl_crl_file }}
+
+- name: 'Prep | assert papertrail logs'
+  when: firefly_cfg_log_log_channel | lower == 'papertrail'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_log_papertrail_host | length > 0
+      - firefly_cfg_log_papertrail_port > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │               Requirements not met: Papertrail logs               │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Papertrail log requires host and port.
+      │
+      │ firefly_cfg_log_log_channel: {{ firefly_cfg_log_log_channel }}
+      │ firefly_cfg_log_papertrail_host: {{ firefly_cfg_log_papertrail_host }}
+      │ firefly_cfg_log_papertrail_port: {{ firefly_cfg_log_papertrail_port }}
+
+- name: 'Prep | assert papertrail audit logs'
+  when: firefly_cfg_log_audit_log_channel | lower == 'papertrail'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_log_papertrail_host | length > 0
+      - firefly_cfg_log_papertrail_port > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │            Requirements not met: Papertrail audit logs            │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Papertrail audit logs require host and port.
+      │
+      │ firefly_cfg_log_audit_log_channel: {{ firefly_cfg_log_audit_log_channel }}
+      │ firefly_cfg_log_papertrail_host: {{ firefly_cfg_log_papertrail_host }}
+      │ firefly_cfg_log_papertrail_port: {{ firefly_cfg_log_papertrail_port }}
+
+- name: 'Prep | assert mailgun'
+  when: firefly_cfg_mail_mailer | lower == 'mailgun'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_mail_mailgun_domain | length > 0
+      - firefly_cfg_mail_mailgun_secret | length > 0
+      - firefly_cfg_mail_mailgun_endpoint | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   Requirements not met: Mailgun                   │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Mailgrun requires all options set.
+      │
+      │ firefly_cfg_mail_mailer: {{ firefly_cfg_mail_mailer }}
+      │ firefly_cfg_mail_mailgun_domain: {{ firefly_cfg_mail_mailgun_domain }}
+      │ firefly_cfg_mail_mailgun_secret: {{ firefly_cfg_mail_mailgun_secret }}
+      │ firefly_cfg_mail_mailgun_endpoint: {{ firefly_cfg_mail_mailgun_endpoint }}
+
+- name: 'Prep | assert mandrill'
+  when: firefly_cfg_mail_mailer | lower == 'mandrill'
+  ansible.builtin.assert:
+    quiet: true
+    that: firefly_cfg_mail_mandrill_secret | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                  Requirements not met: Mandrill                   │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Mandrill requires all options set.
+      │
+      │ firefly_cfg_mail_mailer: {{ firefly_cfg_mail_mailer }}
+      │ firefly_cfg_mail_mandrill_secret: {{ firefly_cfg_mail_mandrill_secret }}
+
+- name: 'Prep | assert sparkpost'
+  when: firefly_cfg_mail_mailer | lower == 'sparkpost'
+  ansible.builtin.assert:
+    quiet: true
+    that: firefly_cfg_mail_sparkpost_secret | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                  Requirements not met: Sparkpost                  │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ sparkpost requires all options set.
+      │
+      │ firefly_cfg_mail_mailer: {{ firefly_cfg_mail_mailer }}
+      │ firefly_cfg_mail_sparkpost_secret: {{ firefly_cfg_mail_sparkpost_secret }}
+
+- name: 'Prep | assert broadcast driver pusher'
+  when: firefly_cfg_app_broadcast_driver | lower == 'pusher'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_pusher_id | length > 0
+      - firefly_cfg_pusher_key | length > 0
+      - firefly_cfg_pusher_token | length > 0
+      - firefly_cfg_pusher_secret | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │           Requirements not met: Pusher broadcast driver           │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Pusher requires broadcast driver set.
+      │
+      │ firefly_cfg_app_broadcast_driver: {{ firefly_cfg_app_broadcast_driver }}
+      │ firefly_cfg_pusher_id: {{ firefly_cfg_pusher_id }}
+      │ firefly_cfg_pusher_key: {{ firefly_cfg_pusher_key }}
+      │ firefly_cfg_pusher_token: {{ firefly_cfg_pusher_token }}
+      │ firefly_cfg_pusher_secret: {{ firefly_cfg_pusher_secret }}
+
+- name: 'Prep | assert redis unix socket'
+  when: firefly_cfg_redis_scheme | lower == 'unix'
+  ansible.builtin.assert:
+    quiet: true
+    that: firefly_cfg_redis_path | length > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │              Requirements not met: Redis unix socket              │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Redis unix socket requires path.
+      │
+      │ firefly_cfg_redis_scheme: {{ firefly_cfg_redis_scheme }}
+      │ firefly_cfg_redis_path: {{ firefly_cfg_redis_path }}
+
+- name: 'Prep | assert redis tcp'
+  when: firefly_cfg_redis_scheme | lower == 'tcp'
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - firefly_cfg_redis_host | length > 0
+      - firefly_cfg_redis_port > 0
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                  Requirements not met: Redis TCP                  │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Redis tcp requires host and port.
+      │
+      │ firefly_cfg_redis_host: {{ firefly_cfg_redis_host }}
+      │ firefly_cfg_redis_port: {{ firefly_cfg_redis_port }}
+
+- name: 'Assert | WARNING ⚠'
+  when: firefly_srv_initialize_database_enable
+  ansible.builtin.debug:
+    msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   Initialize database enabled.                    │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ Database initialization is only needed if ANY version of Firefly
+      │ has never used the specified database before. ONLY required on
+      │ brand new installs with freshly created databases.
+      │
+      │ DATA DESTRUCTIVE.

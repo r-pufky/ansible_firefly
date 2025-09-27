@@ -1,0 +1,84 @@
+---
+###############################################################################
+# Database
+###############################################################################
+# Standard non-sqlite database configuration works properly.
+#
+# Tests:
+# * service is active and running with redis.
+# * Postgres setup runs correctly.
+# * Mysql (maria) setup runs correctly.
+
+dependency:
+  name: 'galaxy'
+driver:
+  name: 'podman'
+provisioner:
+  name: 'ansible'
+  config_options:
+    defaults:
+      interpreter_python: 'auto_silent'
+      callback_whitelist: 'profile_tasks, timer, yaml'
+    ssh_connection:
+      pipelining: false
+  inventory:
+    group_vars:
+      all:
+        firefly_srv_backup_enable: false
+        firefly_srv_initialize_database_enable: false
+        firefly_cfg_auth_static_cron_token: 'EgB8roX6ulTXhAIcZ3gsoIiV4sR1noyi'
+        firefly_cfg_db_app_key: '9IDLY5jViIJX1E8Ujh20YK44IkGacEIc'
+        repo_testing_enable: true
+        repo_testing_versions:
+          - comment: 'default'
+            version: 'v6.4.0'
+            asset: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "FireflyIII-v6.4.0.tar.gz"
+              }}'
+            checksum: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "FireflyIII-v6.4.0.tar.gz.sha256"
+              }}'
+            signature: '{{
+                lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
+                "/molecule/cache/" ~
+                "FireflyIII-v6.4.0.tar.gz.asc"
+              }}'
+platforms:
+  - name: 'firefly-debian-13-database_postgres'
+    image: 'ghcr.io/hifis-net/debian-systemd:13'
+    systemd: 'always'
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+    command: '/lib/systemd/systemd'
+    pre_build_image: true
+  - name: 'firefly-debian-13-database_mysql'
+    image: 'ghcr.io/hifis-net/debian-systemd:13'
+    systemd: 'always'
+    volumes:
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+    command: '/lib/systemd/systemd'
+    pre_build_image: true
+verifier:
+  name: 'ansible'
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+scenario:
+  test_sequence:
+    # - 'dependency'
+    # - 'cleanup'
+    - 'destroy'
+    - 'syntax'
+    - 'create'
+    - 'prepare'
+    - 'converge'
+    # - 'idempotence'  # Files created, extracted, created, deleted.
+    # - 'side_effect'
+    - 'verify'
+    # - 'cleanup'
+    - 'destroy'

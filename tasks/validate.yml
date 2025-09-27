@@ -1,0 +1,39 @@
+---
+###############################################################################
+# Validate
+###############################################################################
+# Ensure Firefly services and confirm they are active and running.
+
+- name: 'Validate | start services'
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    enabled: true
+    daemon_reload: true
+    state: 'started'
+  loop: '{{
+      ["redis-server.service" if _firefly_srv_redis_enable.raw else "",
+       "memcached.service" if _firefly_srv_memcached_enable.raw else "",
+       "nginx.service",
+       _firefly.fpm_service] | select()
+    }}'
+
+- name: 'Validate | query service status'
+  ansible.builtin.service_facts:
+
+- name: 'Validate | assert services running'
+  ansible.builtin.assert:
+    quiet: true
+    that: ansible_facts.services[item].state == 'running'
+    fail_msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                     Service failed to start.                      │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ {{ item }}
+  loop: '{{
+      ["redis-server.service" if _firefly_srv_redis_enable.raw else "",
+       "memcached.service" if _firefly_srv_memcached_enable.raw else "",
+       "nginx.service",
+       _firefly.fpm_service] | select()
+    }}'

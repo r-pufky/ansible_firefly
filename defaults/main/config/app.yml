@@ -1,0 +1,186 @@
+---
+###############################################################################
+# App
+###############################################################################
+
+# FPM Application environment.
+#
+# Values:
+#   production: Tune for performance. Log errors. Console command will ask for
+#               extra confirmations (default).
+#        local: No performance tuning. Display and log errors. Console commands
+#               do not ask for confirmations.
+#      testing: Development only. Do not use.
+#
+# Default: 'production'.
+firefly_cfg_app_app_env: 'production'
+
+# Enable debug info on error screens? Default: False.
+firefly_cfg_app_app_debug: false
+
+# Default language.
+#
+# Values:
+#   {639-1}_{3166-1}: Language and country code. Only specific languages are
+#                     translated. See reference.
+#
+# Default: 'en_US'.
+#
+# Reference:
+# * https://github.com/firefly-iii/firefly-iii/blob/main/config/firefly.php
+# * https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+# * https://en.wikipedia.org/wiki/ISO_3166-1
+firefly_cfg_app_default_language: 'en_US'
+
+# TOOD(role): same as above, locale.
+# Default locale.
+#
+# Values:
+#              equal: Use locale from firefly_cfg_app_default_language.
+#   {639-1}_{3166-1}: Language and country code. Only specific languages are
+#                     translated. See reference.
+#
+# Default: 'equal' (same as language).
+#
+# Reference:
+# * https://github.com/firefly-iii/firefly-iii/blob/main/config/firefly.php
+# * https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+# * https://en.wikipedia.org/wiki/ISO_3166-1
+firefly_cfg_app_default_locale: 'equal'
+
+# Timezone.
+#
+# Default: 'America/Los_Angeles'.
+#
+# Reference:
+# * https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+firefly_cfg_app_tz: 'America/Los_Angeles'
+
+# Cache driver.
+#
+# Values:
+#         apc: Alternative PHP Cache. Legacy PHP option superseded by OPCache
+#              in modern PHP. Do not use.
+#       array: Use in-memory cache only persisting for a single request. Used
+#              for testing or specific non-persistent caching needs. Do not
+#              use.
+#    database: Use the configured database for caching.
+#        file: Use local file.
+#   memcached: Use configured memcache service. For consistency and performance
+#              set firefly_cfg_app_session_driver=memcached.
+#       redis: Use redis service. For consistency and performance set
+#              firefly_cfg_app_session_driver=redis (default).
+#
+# Default: 'redis'.
+firefly_cfg_app_cache_driver: 'redis'
+
+# Session driver.
+#
+# Values:
+#         apc: Alternative PHP Cache. Legacy PHP option superseded by OPCache
+#              in modern PHP. Do not use.
+#       array: Use in-memory cache only persisting for a single request. Used
+#              for testing or specific non-persistent caching needs. Do not
+#              use.
+#    database: Use the configured database for caching.
+#        file: Use local file.
+#   memcached: Use configured memcache service. For consistency and performance
+#              set firefly_cfg_app_cache_driver=memcached.
+#       redis: Use redis service. For consistency and performance set
+#              firefly_cfg_app_cache_driver=redis (default).
+#
+# Default: 'redis'.
+firefly_cfg_app_session_driver: 'redis'
+
+# Application name. Default: 'FireflyIII'.
+firefly_cfg_app_app_name: 'FireflyIII'
+
+###############################################################################
+# Advanced
+###############################################################################
+# Options here should be left as-is unless addressing specific problems.
+
+# Check for SQLite database on startup? Default: False.
+firefly_cfg_app_dkr_check_sqlite: false
+
+# Broadcast event handling.
+#
+# Realtime notifications within application.
+#
+# Values:
+#      log: Send to log (default).
+#     null: Disable.
+#   pusher: Send to Pusher. Requires firefly_cfg_pusher_* configured.
+#    redis: Send to Redis. Requires firefly_cfg_redis_* configured.
+#
+# Default: 'log'.
+firefly_cfg_app_broadcast_driver: 'log'
+
+# Background queue driver.
+#
+# Values:
+#       sync: Process all jobs and tasks immediately as they are created. Use
+#             for home / low traffic and standard-sized data imports. Large or
+#             intensive tasks can cause the application to feel slow or time
+#             out, as the web server has to wait for job to finish before
+#             responding.
+#   database: Store jobs in database and require a separate, manually executed
+#             worker process to run them. Used for processing jobs
+#             asynchronously without setting up another service like Redis. Run
+#
+#               php artisan queue:work
+#
+#             To start a queue worker. A separately configured process manager
+#             must be setup. Role will automatically create required tables.
+#      redis: Send jobs Redis server, which a separate worker process will then
+#             consume and execute. Use for large or complex installations, high
+#             transaction volume, or background processing tasks quickly.
+#             Faster and more scalable than the database driver.
+#             Requires firefly_cfg_redis_* set. Run tasks with:
+#
+#               php artisan queue:work
+#
+# Default: 'sync'.
+firefly_cfg_app_queue_driver: 'sync'
+
+# Cache prefix (for all caching services). Default: 'firefly'.
+firefly_cfg_app_cache_prefix: 'firefly'
+
+# Demo username.
+#
+# Leave disabled for production.
+#
+# Default: '' (disabled).
+firefly_cfg_app_demo_username: ''
+
+# Demo password.
+#
+# Leave disabled for production.
+#
+# Default: '' (disabled).
+firefly_cfg_app_demo_password: ''
+
+# Enable running balance calculations?
+#
+# Experimental feature. Do NOT enable.
+#
+# Default: False.
+firefly_cfg_app_use_running_balance: false
+
+# Application layout.
+#
+# Values:
+#   v1: Stable (default).
+#   v2: Experimental - may lead to data loss.
+#
+# Default: 'v1'.
+firefly_cfg_app_firefly_iii_layout: 'v1'
+
+# Query parser search and rules implementation.
+#
+# Values:
+#      new: Experimental (default).
+#   legacy: Classic.
+#
+# Default: 'new'.
+firefly_cfg_app_query_parser_implementation: 'new'

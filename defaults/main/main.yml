@@ -2,34 +2,235 @@
 ###############################################################################
 # Firefly III Configuration
 ###############################################################################
-# Requires a minimum of 512MB RAM.
+# Database upgrade migrations are done automatically with new versions.
+# Database backend migrations (SQLite/Postgres/MySQL) must be done manually and
+# are not supported by Firefly. Service creates a LEMP stack and should be
+# deployed on an isolated container.
+#
+# Special Case:
+# * Firefly (lavarel) accepts 'null' value which skips service option setting
+#   for that key. Any value in firefly_cfg_* may be defined as 'null'.
+#
+# Install size: ~185MB
+#     Firefly: ~130MB.
+#         PHP: ~50MB.
+#       NGINX: ~1.5MB.
+#       Redis: ~200KB.
+#   Memcached: ~1.1MB.
+#
+# Set repo_host_access_token if API is rate limited. See r_pufky.deb.repo.
+
+# Firefly Release.
+#
+# Versions (Schematic):
+#       MAJOR: Unsafe - requires major role changes; only default MAJOR stable
+#              version is supported.
+#       MINOR: Safe - New functionality may not be properly supported in
+#              configuration.
+#       PATCH: Safe - Usually requires no role updates.
+#   RECOMMEND: Only increment PATCH. Never use 'latest'.
+#
+# Values:
+#   {VERSION}: Tagged release to use ('v6.4.0').
+#      latest: Use latest stable release.
+#
+# Default: 'v6.4.0'.
 #
 # Reference:
-# * https://computingforgeeks.com/setup-firefly-personal-finance-manager-on-ubuntu/
-# * https://docs.firefly-iii.org/firefly-iii/installation/self_hosted/
-# * https://docs.firefly-iii.org/firefly-iii/installation/upgrade/
+# * https://github.com/firefly-iii/firefly-iii/releases
+firefly_srv_version: 'v6.4.0'
 
-# User that firefly will run under. Assumes externally managed.
-firefly_user:  'www-data'
-firefly_group: 'www-data'
+# Firefly GPG key ID.
+#
+# Binary installations are automatically validated against the published key
+# with the specified ID.
+#
+# Reference:
+# * https://keys.openpgp.org/search
+# * https://docs.firefly-iii.org/explanation/more-information/signatures
+firefly_srv_gpg_key_id: 'A9D6BE866CEE3775854B1F96910CF2B5E8B6CC6E'
 
-# Create 'www-data' user if not detected? See: vars/main.yml.
-firefly_create_user: false
+# User data storage location.
+#
+# Linked to current installed version.
+#
+# Default: '/data/firefly/storage'
+firefly_srv_storage_dir: '/data/firefly/storage'
 
-# Version. Default: 'latest'. Changing to a later version will automatically
-# apply an upgrade with related DB changes.
-firefly_version: 'latest'
+# Enable installation of Redis memcache server?
+#
+# A local Redis server will be configured automatically with default options as
+# it is required for default Firefly configuration. Disable if managing Redis
+# externally.
+#
+# Default: True.
+firefly_srv_redis_enable: true
 
-# Should old firefly installs be removed automatically on upgrade success?
-firefly_delete_old_versions: true
+# Enable installation of memcached server?
+#
+# A local memcached server will be configured automatically with default
+# options when enabled. Disable if managing memcached externally.
+#
+# Default: False.
+firefly_srv_memcached_enable: false
 
-# Force (re)create database. Data destructive. First time installs will not
-# create a database and instead run database migrations when false.
-firefly_create_database: false
+# Initialize database for new installs?
+#
+# Firefly database requires a one-time DATA DESTRUCTIVE initialization before
+# use. A new install is detected when there is no pre-existing Firefly install
+# directory. Disabling this will skip initialization steps even if a new
+# install is detected (e.g. rebuilding container with an existing database).
+#
+# Useful for first-install runs. Suggest applying with extra options:
+#
+#   ansible-playbook site.yml
+#       --tags Firefly
+#       -e 'firefly_srv_initialize_database_enable=true'
+#
+# Default: False.
+firefly_srv_initialize_database_enable: false
 
-# Link to specificed storage mount point when defined (should contain export,
-# upload directories).
-firefly_link_storage: '/data/storage'
+# Remove old installs on upgrade success? Default: True.
+firefly_srv_delete_old_versions_enable: true
 
-# Hostname used by the proxy; so proxied requests redirect correctly.
-firefly_proxy_hostname: ''
+# Only apply configuration?
+#
+# Reduces role application time by ONLY applying configuration changes. Does
+# NOT affect firefly_srv_media_set_perms_file_enable.
+#
+# This should ONLY be used after the role has been fully run once.
+#
+# Useful when adding a change without reconfiguring the whole system or
+# checking and installing a new version. Suggest applying with extra options:
+#
+#   ansible-playbook site.yml
+#       --tags Firefly
+#       -e 'firefly_srv_force_config_only_enable=true'
+#
+# Default: False.
+firefly_srv_force_config_only_enable: false
+
+###############################################################################
+# NGINX Options
+###############################################################################
+# Options are applied directly to firefly NGINX configuration.
+#
+# Reference:
+# * https://nginx.org/en/docs/
+
+# Enable HTTPoxy mitigation?
+#
+# An attacker can exploit vulnerable deployments by passing an HTTP Proxy
+# header with their request, which will alter the URL used by the application
+# when contacting backing services. This can be used to leak credentials,
+# modify responses to the application, etc.
+#
+# Security: CVE-2016-5386
+#   CVE:
+#   * https://nvd.nist.gov/vuln/detail/CVE-2016-5386
+#   * https://nvd.nist.gov/vuln/detail/CVE-2016-5387
+#   * https://nvd.nist.gov/vuln/detail/CVE-2016-5388
+#   * https://nvd.nist.gov/vuln/detail/CVE-2016-1000109
+#   * https://nvd.nist.gov/vuln/detail/CVE-2016-1000110
+#   Decision: Disable HTTP_PROXY environment variable by default. User may
+#       enable if they accept risk. HTTPS is not affected.
+#   Mitigation: Use 'fastcgi_param HTTP_PROXY "";' in server block to remove
+#       HTTP_PROXY headers.
+#   Reference:
+#   * https://httpoxy.org/
+#
+# Default: True
+firefly_srv_nginx_httpoxy_mitigation: true
+
+# Enable IPv6? Default: False.
+firefly_srv_nginx_ipv6_enable: false
+
+# server_name directive (domain or IP address).
+#
+# Default: {HOST} (inventory hostname).
+firefly_srv_nginx_server_name:
+  '{{ inventory_hostname ~ " " ~ inventory_hostname_short }}'
+
+###############################################################################
+# PHP Options
+###############################################################################
+
+# Firefly memory limit (MB).
+#
+# Constrain PHP scripts to specified limit when executing.
+#
+# Default: 512 (minimum).
+firefly_srv_php_memory_limit: 512
+
+###############################################################################
+# Backup
+###############################################################################
+
+# Enable backups?
+#
+# All data in firefly_srv_storage_dir will be compressed.
+#
+# Default: True.
+firefly_srv_backup_enable: true
+
+# Backup location.
+#
+# Directory will be created with root permissions.
+#
+# Default: '/data/firefly/backup'.
+firefly_srv_backup_dir: '/data/firefly/backup'
+
+# Backup file owner. Default: 'root'.
+firefly_srv_backup_owner: 'root'
+
+# Backup file group. Default: 'root'.
+firefly_srv_backup_group: 'root'
+
+# Set backup schedule.
+#
+# Uses systemd TIME specification.
+#
+# Default: 'weekly'
+#
+# Reference:
+# * https://www.freedesktop.org/software/systemd/man/latest/systemd.time.html
+firefly_srv_backup_schedule: 'weekly'
+
+###############################################################################
+# Firefly User
+###############################################################################
+
+# User that Firefly will run under.
+#
+# Enable firefly_srv_create_user if this account is not externally managed.
+#
+# Default: 'www-data'.
+firefly_srv_user: 'www-data'
+
+# Group that Firefly will run under.
+#
+# Enable firefly_srv_create_user if this group is not externally managed.
+#
+# Default: 'www-data'.
+firefly_srv_group: 'www-data'
+
+# Enable user management of data/media files?
+#
+# Use firefly_srv_user to execute data/media management commands. Role applies
+# media permissions using 'root' by default. For mounted data locations (NFS
+# with squashed mounts, mapped container mounts, etc) the local root user
+# will not have sufficient privileges to modify these files.
+#
+# Applies to:
+# * firefly_srv_storage_dir
+# * firefly_srv_backup_dir
+#
+# Default: False.
+firefly_srv_user_data_manage_enable: false
+
+# Create firefly_srv_user, firefly_srv_group if not detected?
+#
+# Applied via r_pufky.deb.users, see vars/main.yml for default user attributes.
+#
+# Default: True.
+firefly_srv_create_user: true

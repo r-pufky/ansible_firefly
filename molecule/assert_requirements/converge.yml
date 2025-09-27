@@ -1,0 +1,512 @@
+---
+- name: 'Converge'
+  hosts: 'all'
+  gather_facts: false
+  tasks:
+    - name: 'Converge | assert backup and storage locations are different'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name:
+          'Converge | assert backup and storage locations are different'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message:
+          'Same directories should trigger failure.'
+        firefly_srv_backup_dir: '/data/firefly'
+        firefly_srv_storage_dir: '/data/firefly'
+
+    - name: 'Converge | assert memcached session driver same as cache driver'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: >
+          Converge | assert memcached session driver same as cache driver
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message:
+          'Mis-matched cache, session drivers did not trigger assertion.'
+        firefly_cfg_app_session_driver: 'memcached'
+        firefly_cfg_app_cache_driver: 'redis'
+
+    - name: 'Converge | assert redis session driver same as cache driver'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name:
+          Converge | assert redis session driver same as cache driver
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message:
+          'Mis-match cache, session drivers  did not trigger assertion.'
+        firefly_cfg_app_session_driver: 'redis'
+        firefly_cfg_app_cache_driver: 'memcache'
+
+    - name: 'Converge | assert third party authenticator missing header'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert third party authenticator missing header'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty header did not trigger assertion.'
+        firefly_cfg_auth_authentication_guard: 'remote_user_guard'
+        firefly_cfg_auth_authentication_guard_header: ''
+        firefly_cfg_auth_authentication_guard_email: 'test@example.com'
+
+    - name: 'Converge | assert third party authenticator missing email'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert third party authenticator missing email'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty email did not trigger assertion.'
+        firefly_cfg_auth_authentication_guard: 'remote_user_guard'
+        firefly_cfg_auth_authentication_guard_header: 'X-AUTH-TEST'
+        firefly_cfg_auth_authentication_guard_email: ''
+
+    - name: 'Converge | assert database encryption key short'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database encryption key short'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Short test key did not trigger assertion.'
+        firefly_cfg_db_app_key: 'testkey'
+
+    - name: 'Converge | assert database encryption key long'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database encryption key long'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Long test key did not trigger assertion.'
+        firefly_cfg_db_app_key: 'thistestkeyisover32characterslong'
+
+    - name: 'Converge | assert sqlite cannot use socket connections'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert sqlite cannot use socket connections'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Sqlite with socket did not trigger assertion.'
+        firefly_cfg_db_connection: 'sqlite'
+        firefly_cfg_db_socket: '/var/run/postgresql/.s.PGSQL.5432'
+
+    - name: 'Converge | assert database host requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database host requirements'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty host did not trigger assertion.'
+        firefly_cfg_db_connection: '{{ item }}'
+        firefly_cfg_db_host: ''
+        firefly_cfg_db_port: 5432
+      loop:
+        - 'pgsql'
+        - 'mysql'
+
+    - name: 'Converge | assert database port requirements'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database port requirements'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty port did not trigger assertion.'
+        firefly_cfg_db_connection: '{{ item }}'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: -1
+      loop:
+        - 'pgsql'
+        - 'mysql'
+
+    - name: 'Converge | assert database connection database'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database connection database'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty database did not trigger assertion.'
+        firefly_cfg_db_connection: '{{ item }}'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: ''
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+      loop:
+        - 'pgsql'
+        - 'mysql'
+
+    - name: 'Converge | assert database connection username'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database connection username'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty username did not trigger assertion.'
+        firefly_cfg_db_connection: '{{ item }}'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: ''
+        firefly_cfg_db_password: 'firefly'
+      loop:
+        - 'pgsql'
+        - 'mysql'
+
+    - name: 'Converge | assert database connection password'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert database connection password'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty password did not trigger assertion.'
+        firefly_cfg_db_connection: '{{ item }}'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: ''
+      loop:
+        - 'pgsql'
+        - 'mysql'
+
+    - name: 'Converge | assert mysql SSL CA'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mysql SSL CA'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'mysql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_mysql_ssl_ca: 'dir/'
+        firefly_cfg_db_mysql_ssl_cert: 'dir/cert.pem'
+        firefly_cfg_db_mysql_ssl_key: 'dir/cert.pem'
+
+    - name: 'Converge | assert mysql SSL cert'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mysql SSL cert'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'mysql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_mysql_ssl_ca: 'dir/cert.pem'
+        firefly_cfg_db_mysql_ssl_cert: 'dir/'
+        firefly_cfg_db_mysql_ssl_key: 'dir/cert.pem'
+
+    - name: 'Converge | assert mysql SSL key'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mysql SSL key'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'mysql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_mysql_ssl_ca: 'dir/cert.pem'
+        firefly_cfg_db_mysql_ssl_cert: 'dir/cert.pem'
+        firefly_cfg_db_mysql_ssl_key: 'dir/'
+
+    - name: 'Converge | assert postgres SSL root cert'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert postgres SSL root cert'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'pgsql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_pgsql_ssl_root_cert: 'dir/'
+        firefly_cfg_db_pgsql_ssl_cert: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_key: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_crl_file: 'dir/cert.pem'
+
+    - name: 'Converge | assert postgres SSL cert'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert postgres SSL cert'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'pgsql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_pgsql_ssl_root_cert: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_cert: 'dir/'
+        firefly_cfg_db_pgsql_ssl_key: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_crl_file: 'dir/cert.pem'
+
+    - name: 'Converge | assert postgres SSL key'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert postgres SSL key'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'pgsql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_pgsql_ssl_root_cert: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_cert: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_key: 'dir/'
+        firefly_cfg_db_pgsql_ssl_crl_file: 'dir/cert.pem'
+
+    - name: 'Converge | assert postgres SSL CRL cert'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert postgres SSL CRL cert'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Directory did not trigger assertion.'
+        firefly_cfg_db_connection: 'pgsql'
+        firefly_cfg_db_host: 'localhost'
+        firefly_cfg_db_port: 5432
+        firefly_cfg_db_database: 'firefly'
+        firefly_cfg_db_username: 'firefly'
+        firefly_cfg_db_password: 'firefly'
+        firefly_cfg_db_pgsql_ssl_root_cert: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_cert: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_key: 'dir/cert.pem'
+        firefly_cfg_db_pgsql_ssl_crl_file: 'dir/'
+
+    - name: 'Converge | assert papertrail logs host'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert papertrail logs host'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty host should trigger assertion failure.'
+        firefly_cfg_log_log_channel: 'papertrail'
+        firefly_cfg_log_papertrail_host: ''
+        firefly_cfg_log_papertrail_port: 515
+
+    - name: 'Converge | assert papertrail logs port'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert papertrail logs port'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty port should trigger assertion failure.'
+        firefly_cfg_log_log_channel: 'papertrail'
+        firefly_cfg_log_papertrail_host: 'localhost'
+        firefly_cfg_log_papertrail_port: -1
+
+    - name: 'Converge | assert papertrail audit logs host'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert papertrail audit logs host'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty host should trigger assertion failure.'
+        firefly_cfg_log_audit_log_channel: 'papertrail'
+        firefly_cfg_log_papertrail_host: ''
+        firefly_cfg_log_papertrail_port: 515
+
+    - name: 'Converge | assert papertrail audit logs port'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert papertrail audit logs port'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty port should trigger assertion failure.'
+        firefly_cfg_log_audit_log_channel: 'papertrail'
+        firefly_cfg_log_papertrail_host: 'localhost'
+        firefly_cfg_log_papertrail_port: -1
+
+    - name: 'Converge | assert mail mailgun domain'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mail mailgun domain'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty domain should trigger assertion failure.'
+        firefly_cfg_mail_mailer: 'mailgun'
+        firefly_cfg_mail_mailgun_domain: ''
+        firefly_cfg_mail_mailgun_secret: 'test'
+        firefly_cfg_mail_mailgun_endpoint: '/api'
+
+    - name: 'Converge | assert mail mailgun secret'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mail mailgun secret'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty secret should trigger assertion failure.'
+        firefly_cfg_mail_mailer: 'mailgun'
+        firefly_cfg_mail_mailgun_domain: 'example.com'
+        firefly_cfg_mail_mailgun_secret: ''
+        firefly_cfg_mail_mailgun_endpoint: '/api'
+
+    - name: 'Converge | assert mail mailgun endpoint'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mail mailgun endpoint'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty endpoint should trigger assertion failure.'
+        firefly_cfg_mail_mailer: 'mailgun'
+        firefly_cfg_mail_mailgun_domain: 'example.com'
+        firefly_cfg_mail_mailgun_secret: 'test'
+        firefly_cfg_mail_mailgun_endpoint: ''
+
+    - name: 'Converge | assert mail mandrill secret'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mail mandrill secret'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty secret should trigger assertion failure.'
+        firefly_cfg_mail_mailer: 'mandrill'
+        firefly_cfg_mail_mandrill_secret: ''
+
+    - name: 'Converge | assert mail sparkpost secret'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert mail sparkpost secret'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty secret should trigger assertion failure.'
+        firefly_cfg_mail_mailer: 'sparkpost'
+        firefly_cfg_mail_sparkpost_secret: ''
+
+    - name: 'Converge | assert broadcast driver pusher id'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert broadcast driver pusher id'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty id should trigger assertion failure.'
+        firefly_cfg_app_broadcast_driver: 'pusher'
+        firefly_cfg_pusher_id: ''
+        firefly_cfg_pusher_key: 'test'
+        firefly_cfg_pusher_token: 'test'
+        firefly_cfg_pusher_secret: 'test'
+
+    - name: 'Converge | assert broadcast driver pusher key'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert broadcast driver pusher key'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty key should trigger assertion failure.'
+        firefly_cfg_app_broadcast_driver: 'pusher'
+        firefly_cfg_pusher_id: 'test'
+        firefly_cfg_pusher_key: ''
+        firefly_cfg_pusher_token: 'test'
+        firefly_cfg_pusher_secret: 'test'
+
+    - name: 'Converge | assert broadcast driver pusher token'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert broadcast driver pusher token'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty token should trigger assertion failure.'
+        firefly_cfg_app_broadcast_driver: 'pusher'
+        firefly_cfg_pusher_id: ''
+        firefly_cfg_pusher_key: 'test'
+        firefly_cfg_pusher_token: 'test'
+        firefly_cfg_pusher_secret: 'test'
+
+    - name: 'Converge | assert broadcast driver pusher secret'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert broadcast driver pusher secret'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty secret should trigger assertion failure.'
+        firefly_cfg_app_broadcast_driver: 'pusher'
+        firefly_cfg_pusher_id: ''
+        firefly_cfg_pusher_key: 'test'
+        firefly_cfg_pusher_token: 'test'
+        firefly_cfg_pusher_secret: 'test'
+
+    - name: 'Converge | assert redis unix socket'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert redis unix socket'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty path should trigger assertion failure.'
+        firefly_cfg_redis_scheme: 'unix'
+        firefly_cfg_redis_path: ''
+
+    - name: 'Converge | assert redis tcp host'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert redis tcp host'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty host should trigger assertion failure.'
+        firefly_cfg_redis_scheme: 'tcp'
+        firefly_cfg_redis_host: ''
+        firefly_cfg_redis_port: 123
+
+    - name: 'Converge | assert redis tcp port'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | assert redis tcp port'
+        test_role: 'r_pufky.srv.firefly'
+        test_fail_message: 'Empty port should trigger assertion failure.'
+        firefly_cfg_redis_scheme: 'tcp'
+        firefly_cfg_redis_host: 'localhost'
+        firefly_cfg_redis_port: -1

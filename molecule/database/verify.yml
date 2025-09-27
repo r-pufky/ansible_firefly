@@ -1,0 +1,35 @@
+---
+- name: 'Verify'
+  hosts: 'all'
+  gather_facts: false
+  tasks:
+    - name: 'Verify | /data/firefly/storage'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'file.yml'
+      vars:
+        test_name: 'Verify | /data/firefly/storage'
+        test_file: '/data/firefly/storage'
+        test_owner: 'www-data'
+        test_group: 'www-data'
+        test_mode: '0750'
+        test_state: 'directory'
+        test_diff: true
+
+    - name: 'Verify | query storage link'
+      ansible.builtin.stat:
+        path: '/opt/firefly/firefly-iii-v6.4.0/storage'
+      register: _firefly_test
+
+    - name: 'Verify | assert storage link'
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - _firefly_test.stat.islnk
+          - _firefly_test.stat.lnk_target == '/data/firefly/storage'
+        fail_msg: |
+          ╭───────────────────────────────────────────────────────────────────╮
+          │                                                                   │
+          │        storage should be linked to /data/firefly/storage.         │
+          │                                                                   │
+          ╰───────────────────────────────────────────────────────────────────╯

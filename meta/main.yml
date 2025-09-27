@@ -1,16 +1,16 @@
 ---
 galaxy_info:
-  role_name:   'firefly'
-  author:      'r_pufky'
-  description: 'firefly III finance manager'
-  company:     'N/A'
-  license:     'AGPL-3.0 License'
-  min_ansible_version: 2.11
+  role_name: 'firefly'
+  author: 'r_pufky'
+  description: 'Firefly III Finance Manager'
+  company: 'N/A'
+  license: 'AGPL-3.0 License'
+  min_ansible_version: '2.18.0'
 
   platforms:
     - name: 'Debian'
       versions:
-        - 'bullseye'
+        - 'trixie'
 
   galaxy_tags:
     - 'firefly'

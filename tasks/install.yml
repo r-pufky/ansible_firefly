@@ -1,68 +1,131 @@
 ---
 ###############################################################################
-# Install Dependencies for Firefly III
+# Install Packages & Services
 ###############################################################################
-# Facts:
-#   _firefly_target_version
-#   _firefly_versioned_install_dir
-#   _firefly_install_dir
+# Install packages, locales, and service dependencies.
+#
+# Debian PHP packages are behind PHP releases. Sury packages are maintained by
+# the Debian developer and kept up-to-date. Manually download and install the
+# keyring.
+#
+# Redis, memcached, and NGINX installed with default configurations if enabled.
+#
+# Do not overwrite existing user data storage locations during extraction.
+# These are migrated in place. Caching services (redis, memcached) must be
+# started before database configuration.
 #
 # Reference:
-# * https://computingforgeeks.com/setup-firefly-personal-finance-manager-on-ubuntu/
-# * https://docs.firefly-iii.org/firefly-iii/installation/self_hosted/
-# * https://docs.firefly-iii.org/firefly-iii/installation/upgrade/
-# * https://r-pufky.github.io/docs/services/firefly/index.html
+# * https://deb.sury.org
+# * https://packages.sury.org/php/README.txt
+# * https://packages.sury.org
+# * https://redis.io/docs/getting-started/#securing-redis
 
-- name: 'install | check install status'
+- name: 'Install | packages'
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.apt'
+  vars:
+    apt_packages:
+      - '{{ firefly_role_packages }}'
+      - '{{
+          firefly_role_mysql_packages
+          if _firefly_cfg_db_connection.raw == "mysql" else
+          []
+        }}'
+      - '{{
+          firefly_role_postgres_packages
+          if _firefly_cfg_db_connection.raw == "pgsql" else
+          []
+        }}'
+      - '{{
+          firefly_role_sqlite_packages
+          if _firefly_cfg_db_connection.raw == "sqlite" else
+          []
+        }}'
+      - '{{
+          firefly_role_redis_packages
+          if _firefly_srv_redis_enable.raw else
+          []
+        }}'
+      - '{{
+          firefly_role_memcached_packages
+          if _firefly_srv_memcached_enable.raw else
+          []
+        }}'
+    apt_sources: '{{ firefly_role_apt_sources }}'
+    apt_package_update_cache: true
+
+- name: 'Install | locales'
+  community.general.locale_gen:
+    name: '{{
+        [_firefly_cfg_app_default_language.data,
+         _firefly_cfg_app_default_locale.data
+         if _firefly_cfg_app_default_locale.raw != "equal" else
+         ""] | select()
+      }}'
+    state: 'present'
+
+# User data is storage externally and linked; do not migrate storage.
+- name: 'Install | FireflyIII {{ _firefly_srv_version.raw }}'
+  when: not _firefly_srv_force_config_only_enable.raw
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.repo'
+  vars:
+    repo_release_owner: '{{ firefly_role_repo_owner }}'
+    repo_release_repo: '{{ firefly_role_repo_repo }}'
+    repo_release_tag: '{{ _firefly_srv_version.raw }}'
+    repo_release_asset: '{{ firefly_role_repo_asset }}'
+    repo_release_checksum: '{{ firefly_role_repo_asset }}.sha256'
+    repo_release_signature: '{{ firefly_role_repo_asset }}.asc'
+    repo_release_gpg_key_id: '{{ _firefly_srv_gpg_key_id.raw }}'
+    repo_file_owner: '{{ _firefly_srv_user.raw }}'
+    repo_file_group: '{{ _firefly_srv_group.raw }}'
+    repo_extract_dir: '{{ firefly_role_repo_extract_dir }}'
+    repo_extract_symlink: '{{ firefly_role_repo_extract_symlink }}'
+    repo_extract_delete_old_versions:
+      '{{ _firefly_srv_delete_old_versions_enable.raw }}'
+    repo_extract_mode: 'a-st,o-rwx'
+    repo_extract_extra_opts:
+      - '--strip-components=1'
+      - '--exclude=storage'
+    repo_extract_remove_files:
+      - '.editorconfig'
+      - '.env.example'
+      - '.env.testing'
+      - '.gitattributes'
+      - '.gitignore'
+      - 'COPYING'
+      - 'LICENSE'
+      - 'THANKS.md'
+      - 'changelog.md'
+      - 'readme.md'
+      - 'releases.md'
+      - 'storage/app/build/ebcdic.txt'  # Build artifact not needed.
+      - 'storage/app/build/test-upload.csv'  # Build artifact not needed.
+
+- name: 'Install | resolve install symlink'
   ansible.builtin.stat:
-    path: '{{ _firefly_versioned_install_dir }}'
-  register: _firefly_install_stat
+    path: '{{ firefly_role_repo_extract_symlink }}'
+  register: _firefly_link
 
-- name: 'install | set logrotate'
-  ansible.builtin.copy:
-    src:   'firefly-iii.logrotate'
-    dest:  '/etc/logrotate.d/firefly-iii'
-    owner: 'root'
-    group: 'root'
-    mode:  0644
+- name: 'Install | update firefly install locations'
+  ansible.builtin.set_fact:
+    _firefly: '{{
+        _firefly |
+        combine({
+            "root": _firefly_link.stat.lnk_target,
+            "storage": _firefly_link.stat.lnk_target ~ "/storage",
+            "logs": _firefly_link.stat.lnk_target ~ "/storage/logs/*.log"
+          })
+      }}'
 
-- name: 'install | install new version'
-  block:
-    - name: 'install | install'
-      community.general.composer:
-        command:     'create-project'
-        arguments:   'grumpydictator/firefly-iii {{ _firefly_versioned_install_dir }} {{ _firefly_target_version }}'
-        working_dir: '/var/www/html'
-        prefer_dist: true
-        no_dev:      true
-      notify: 'restart nginx-fpm'
-
-    - ansible.builtin.include_tasks: storage.yml
-
-    - name: 'install | set ownership'
-      ansible.builtin.file:
-        path:    '{{ _firefly_versioned_install_dir }}'
-        owner:   '{{ firefly_user }}'
-        group:   '{{ firefly_group }}'
-        state:   'directory'
-        recurse: true
-      notify: 'restart nginx-fpm'
-
-    - name: 'install | link to current'
-      ansible.builtin.file:
-        src:   '{{ _firefly_versioned_install_dir }}'
-        dest:  '{{ _firefly_install_dir }}'
-        owner: '{{ firefly_user }}'
-        group: '{{ firefly_group }}'
-        state: 'link'
-      notify: 'restart nginx-fpm'
-  when: not _firefly_install_stat.stat.exists
-
-- name: 'install | set config'
-  ansible.builtin.template:
-    src:   'firefly.env.j2'
-    dest:  '{{ _firefly_versioned_install_dir }}/.env'
-    owner: '{{ firefly_user }}'
-    group: '{{ firefly_group }}'
-    mode:  0640
-  notify: 'restart nginx-fpm'
+# Caching services are required before database configuration.
+- name: 'Install | warmup cache'
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    state: 'started'
+  failed_when: false
+  loop: '{{
+      ["redis-server.service" if _firefly_srv_redis_enable.raw else "",
+       "memcached.service" if _firefly_srv_memcached_enable.raw else ""] |
+      select()
+    }}'

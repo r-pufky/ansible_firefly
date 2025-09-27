@@ -1,0 +1,58 @@
+---
+###############################################################################
+# Redis
+###############################################################################
+
+# Redis scheme.
+#
+# Values:
+#    tcp: Use TCP (default).
+#   unix: Use unix socket.
+#
+# Default: 'tcp'.
+firefly_cfg_redis_scheme: 'tcp'
+
+# Redis unix socket path.
+#
+# Requires firefly_cfg_redis_scheme=unix.
+#
+# Default: ''.
+firefly_cfg_redis_path: ''
+
+# Redis host.
+#
+# Requires firefly_cfg_redis_scheme=tcp.
+#
+# Default: '127.0.0.1'.
+firefly_cfg_redis_host: '127.0.0.1'
+
+# Redis port.
+#
+# Requires firefly_cfg_redis_scheme=tcp.
+#
+# Default: 6379.
+firefly_cfg_redis_port: 6379
+
+# Redis username.
+#
+# Requires firefly_cfg_redis_scheme=tcp.
+#
+# Only use for Redis 6+ with ACL's configured.
+#
+# Default: ''.
+firefly_cfg_redis_username: ''
+
+# Redis password.
+#
+# Requires firefly_cfg_redis_scheme=tcp.
+#
+# Only use for Redis 6+ with ACL's configured.
+#
+# Default: ''.
+firefly_cfg_redis_password: ''
+
+# Redis database. Default: 0.
+firefly_cfg_redis_db: 0
+
+# Redis cache database. Default: 0.
+firefly_cfg_redis_cache_db: 1

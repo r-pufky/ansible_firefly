@@ -1,0 +1,141 @@
+---
+###############################################################################
+# Mail
+###############################################################################
+# Reference:
+# * https://docs.firefly-iii.org/how-to/firefly-iii/advanced/notifications/
+
+# Site owner email address. Default: 'mail@example.com'.
+firefly_cfg_mail_site_owner: 'mail@example.com'
+
+# Mail system to use.
+#
+# Values:
+#       smtp: SMTP mail server.
+#   sendmail: sendmail.
+#    mailgun: mailgun.
+#   mandrill: mandrill.
+#  sparkpost: sparkpost.
+#        log: Write email messages to log files. Reset links may be copied from
+#             log.
+#
+# Default: 'log'.
+firefly_cfg_mail_mailer: 'log'
+
+# SMTP host. Default: 'null'
+firefly_cfg_mail_host: 'null'
+
+# SMTP port. Default: 2525.
+firefly_cfg_mail_port: 2525
+
+# SMTP sender address (from). Default: 'firefly@example.com'
+firefly_cfg_mail_from: 'firefly@example.com'
+
+# SMTP username. Default: 'null'
+firefly_cfg_mail_username: 'null'
+
+# SMTP password. Default: 'null'.
+firefly_cfg_mail_password: 'null'
+
+# SMTP encryption method.
+#
+# Values:
+#    tls: Use TLS.
+#    ssl: Use SSL.
+#   null: Disable encryption (default).
+#
+# Default: 'null'.
+firefly_cfg_mail_encryption: 'null'
+
+# Sendmail command.
+#
+# Requires firefly_cfg_mail_mailer=sendmail.
+#
+# Default: '' (disabled).
+firefly_cfg_mail_sendmail_command: ''
+
+# Allow self-signed mail certificates? Default: False.
+firefly_cfg_mail_allow_self_signed: false
+
+# Verify peer certificates? Default: True.
+firefly_cfg_mail_verify_peer: true
+
+# Verify peer certificate names? Default: True.
+firefly_cfg_mail_verify_peer_name: true
+
+# Enable sending error messages via email? Default: False.
+firefly_cfg_mail_send_error_message: false
+
+# Enable sending report journals via email?
+#
+# These messages contain (sensitive) transaction information.
+#
+# Default: False.
+firefly_cfg_mail_send_report_journals: false
+
+###############################################################################
+# Mailgun Options
+###############################################################################
+
+# Mailgun domain.
+#
+# Requires firefly_cfg_mail_mailer=mailgun.
+#
+# Default: '' (disabled).
+firefly_cfg_mail_mailgun_domain: ''
+
+# Mailgun secret.
+#
+# Requires firefly_cfg_mail_mailer=mailgun.
+#
+# Default: '' (disabled).
+firefly_cfg_mail_mailgun_secret: ''
+
+# Mailgun API endpoint.
+#
+# Requires firefly_cfg_mail_mailer=mailgun.
+#
+# Values:
+#   api.eu.mailgun.net: EU region.
+#      api.mailgun.net: All other regions.
+#
+# Default: 'api.mailgun.net' (non-EU regions).
+firefly_cfg_mail_mailgun_endpoint: 'api.mailgun.net'
+
+###############################################################################
+# Mandrill Options
+###############################################################################
+
+# Mandrill secret.
+#
+# Requires firefly_cfg_mail_mailer=mandrill.
+#
+# Default: '' (disabled).
+firefly_cfg_mail_mandrill_secret: ''
+
+###############################################################################
+# Sparkpost Options
+###############################################################################
+
+# Sparkpost secret.
+#
+# Requires firefly_cfg_mail_mailer=sparkpost.
+#
+# Default: '' (disabled).
+firefly_cfg_mail_sparkpost_secret: ''
+
+###############################################################################
+# MailerSend Options
+###############################################################################
+
+# MailerSend API key.
+#
+# Firefly does not directly integrate with MailerSend for sending emails.
+# Firefly III uses its own internal system for notifications and emails, and
+# does not directly integrate with MailerSend.
+#
+# Requires intermediate service or custom integration that receives webhook
+# data uses MailerSend API to send the actual emails.
+#
+# Default: ''
+firefly_cfg_mail_mailersend_api_key: ''

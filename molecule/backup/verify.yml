@@ -1,0 +1,34 @@
+---
+- name: 'Verify'
+  hosts: 'all'
+  gather_facts: false
+  tasks:
+    - name: 'Verify | /data/firefly/backup'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'file.yml'
+      vars:
+        test_name: 'Verify | /data/firefly/backup'
+        test_file: '/data/firefly/backup'
+        test_owner: 'www-data'
+        test_group: 'www-data'
+        test_mode: '0750'
+        test_state: 'directory'
+        test_diff: true
+
+- name: 'Verify'
+  hosts: 'firefly-debian-13-backup_remove'
+  gather_facts: false
+  tasks:
+    - name: 'Verify | backup script removed'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'file.yml'
+      vars:
+        test_name: 'Verify | backup script removed'
+        test_file: '/data/firefly/backup/firefly_backup'
+        test_owner: 'www-data'
+        test_group: 'www-data'
+        test_mode: '0750'
+        test_state: 'absent'
+        test_diff: true

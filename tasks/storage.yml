@@ -1,36 +1,175 @@
 ---
 ###############################################################################
-# Link Data Storage
+# Storage
 ###############################################################################
-#
-# Facts:
-#   _firefly_versioned_install_dir
+# Set storage configuration, link, and enforce permissions. All storage
+# locations may be mounted filesystems.
 
-- name: 'storage | link data storage'
-  block:
-    - name: 'storage | remove storage template directories'
-      ansible.builtin.file:
-        dest:  '{{ _firefly_versioned_install_dir }}/storage/{{ item }}'
-        state: 'absent'
-      loop:
-        - 'export'
-        - 'upload'
-
-    - name: 'storage | link storage mounts'
-      ansible.builtin.file:
-        src:   '{{ firefly_link_storage }}/{{ item }}'
-        dest:  '{{ _firefly_versioned_install_dir }}/storage/{{ item }}'
-        owner: '{{ firefly_user }}'
-        group: '{{ firefly_group }}'
-        state: 'link'
-      loop:
-        - 'export'
-        - 'upload'
-  when: firefly_link_storage|length > 0
-
-- name: 'storage | set permissions'
+- name: 'Storage | set storage'
   ansible.builtin.file:
-    path:    '{{ _firefly_versioned_install_dir }}/storage'
-    mode:    0775
-    state:   'directory'
-    recurse: true
+    path: '{{ _firefly_srv_storage_dir.data ~ item }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0750'
+    state: 'directory'
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+  loop:
+    - 'app/public'
+    - 'app/build'
+    - 'certs'
+    - 'database'
+    - 'debugbar'
+    - 'export'
+    - 'framework/cache/data'
+    - 'framework/sessions'
+    - 'framework/testing'
+    - 'framework/views/v1'
+    - 'logs'
+    - 'upload'
+
+- name: 'Storage | link user data storage'
+  ansible.builtin.file:
+    src: '{{ _firefly_srv_storage_dir.raw }}'
+    dest: '{{ _firefly.storage }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    state: 'link'
+
+- name: 'Storage | set MySql SSL CA cert'
+  when: _firefly_cfg_db_mysql_ssl_ca.raw | length > 0
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_mysql_ssl_ca.raw }}'
+    dest: '{{ _firefly_cfg_db_mysql_ssl_ca.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | set MySql SSL cert'
+  when: _firefly_cfg_db_mysql_ssl_cert.raw | length > 0
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_mysql_ssl_cert.raw }}'
+    dest: '{{ _firefly_cfg_db_mysql_ssl_cert.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | set MySql SSL cert'
+  when: _firefly_cfg_db_mysql_ssl_key.raw | length > 0
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_mysql_ssl_key.raw }}'
+    dest: '{{ _firefly_cfg_db_mysql_ssl_key.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | set PostgreSQL SSL root cert'
+  when: _firefly_cfg_db_pgsql_ssl_root_cert.raw != 'null'
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_pgsql_ssl_root_cert.raw }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_root_cert.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | set PostgreSQL SSL cert'
+  when: _firefly_cfg_db_pgsql_ssl_cert.raw != 'null'
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_pgsql_ssl_cert.raw }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_cert.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | set PostgreSQL SSL key'
+  when: _firefly_cfg_db_pgsql_ssl_key.raw != 'null'
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_pgsql_ssl_key.raw }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_key.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | set PostgreSQL SSL CRL cert'
+  when: _firefly_cfg_db_pgsql_ssl_crl_file.raw != 'null'
+  ansible.builtin.copy:
+    src: '{{ _firefly_cfg_db_pgsql_ssl_crl_file.raw }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_crl_file.role_dest }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0400'
+    directory_mode: '0750'
+    force: true
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'
+
+- name: 'Storage | touch sqlite3 database'
+  when: _firefly_cfg_db_connection.raw == 'sqlite'
+  ansible.builtin.file:
+    path: '{{ _firefly.storage ~ "/database/database.sqlite" }}'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0640'
+    state: 'touch'
+  become: true
+  become_user: '{{
+      _firefly_srv_user.raw
+      if _firefly_srv_user_data_manage_enable.raw else
+      "root"
+    }}'

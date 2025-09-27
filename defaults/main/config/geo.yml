@@ -1,0 +1,24 @@
+---
+###############################################################################
+# Geolocation and Mapping
+###############################################################################
+
+# Enable geo locations for transactions? Default: False.
+firefly_cfg_geo_enable_external_map: false
+
+# Default map latitude. Default: 51.983333.
+firefly_cfg_geo_default_lat: 51.983333
+
+# Default map longitude. Default: 5.916667.
+firefly_cfg_geo_default_long: 5.916667
+
+# Default map zoom. Default: 6.
+firefly_cfg_geo_default_zoom: 6
+
+# IPinfo token.
+#
+# Include geolocation details from IP address for new logins. Uses IPinfo
+# service.
+#
+# Default: '' (disabled).
+firefly_cfg_geo_ipinfo_token: ''

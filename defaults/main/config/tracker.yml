@@ -1,0 +1,16 @@
+---
+###############################################################################
+# Tracker
+###############################################################################
+# Analytics tracker. Only supports Matomo.
+
+# Tracker site ID. Default: '' (disabled).
+firefly_cfg_tracker_site_id: ''
+
+# Tracker URL.
+#
+# Special Case:
+# * Do not prepend http:// or https://.
+#
+# Default: '' (disabled).
+firefly_cfg_tracker_url: ''

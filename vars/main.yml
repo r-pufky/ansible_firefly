@@ -1,42 +1,142 @@
 ---
+# yamllint disable rule:line-length
 ###############################################################################
-# Default Firefly Package Dependencies
+# Firefly Role Options
 ###############################################################################
-# Default required packages for firefly install.
+# Firefly requires a LEMP stack.
+#
+# Updates:
+# * New MAJOR, MINOR releases should hard branch at version before starting
+#   (e.g. 2.14.x branch).
+# * Keep a separate change log as changes are made, you will not remember all
+#   of them.
+# * Use bare-metal docs to validate package/process changes.
+# * Update role defaults (includes updating defaults, tasks):
+#   * .env.example
+#
+#       meld \
+#         <(curl -s https://raw.githubusercontent.com/firefly-iii/firefly-iii/refs/tags/{OLD}/.env.example)
+#         <(curl -s https://raw.githubusercontent.com/firefly-iii/firefly-iii/refs/tags/{NEW}/.env.example)
+#
+#   * Use configuration docs to add new variables.
+#   * Use defaults/ to remove any changed/deprecated variables.
+# * Check storage directory in tarball for any new directories.
+# * PHP changes require adding stops for old php{VERSION}-fpm.service.
+# * Update tests for any changes.
+# * Standard role validation testing (yamllint, ansible-lint, todo, noqa).
+# * Tag with OS-APP-ROLE version.
+#
+# Reference:
+# * https://github.com/firefly-iii/firefly-iii
+# * https://docs.firefly-iii.org/how-to/firefly-iii/installation/self-managed/
+# * https://gist.github.com/Engr-AllanG/34e77a08e1482284763fff429cdd92fa
 
-# php version used in config paths.
-firefly_php_version: '8.0'
+# Last time firefly options were validated against a default configuration.
+firefly_role_validate_date: '2025-09-17'
+firefly_role_validate_release: 'trixie'
+firefly_role_validate_version: 'v6.4.0'
+firefly_role_validate_php_version: '8.4'
 
-firefly_default_packages:
+###############################################################################
+# APT Packages
+###############################################################################
+# Debian PHP packages are behind PHP releases. Sury packages are maintained by
+# the Debian developer and kept up-to-date. Manually download and install the
+# keyring.
+#
+# FPM PHP package includes:
+#   - core
+#   - date
+#   - filter
+#   - hash
+#   - json
+#   - libxml
+#   - openssl
+#   - pcre
+#   - random
+#   - reflection
+#   - session
+#   - sodium
+#   - spl
+#   - standard
+#   - zlib
+#
+# Reference:
+# * https://deb.sury.org
+# * https://packages.sury.org/php/README.txt
+# * https://packages.sury.org
+
+firefly_role_packages:
+  - 'locales'
   - 'gnupg2'
   - 'nginx'
-  - 'curl'
+  - 'xz-utils'  # tar.xz backups.
+  - 'php{{ firefly_role_validate_php_version }}'
+  - 'php{{ firefly_role_validate_php_version }}-fpm'
+  - 'php{{ firefly_role_validate_php_version }}-bcmath'
+  - 'php{{ firefly_role_validate_php_version }}-intl'
+  - 'php{{ firefly_role_validate_php_version }}-curl'
+  - 'php{{ firefly_role_validate_php_version }}-zip'
+  - 'php{{ firefly_role_validate_php_version }}-gd'
+  - 'php{{ firefly_role_validate_php_version }}-xml'
+  - 'php{{ firefly_role_validate_php_version }}-mbstring'
 
-firefly_default_php_packages:
-  - 'php{{ firefly_php_version }}'
-  - 'php{{ firefly_php_version }}-cli'
-  - 'php{{ firefly_php_version }}-zip'
-  - 'php{{ firefly_php_version }}-gd'
-  - 'php{{ firefly_php_version }}-fpm'
-  - 'php{{ firefly_php_version }}-common'
-  - 'php{{ firefly_php_version }}-pgsql'
-  - 'php{{ firefly_php_version }}-zip'
-  - 'php{{ firefly_php_version }}-mbstring'
-  - 'php{{ firefly_php_version }}-curl'
-  - 'php{{ firefly_php_version }}-xml'
-  - 'php{{ firefly_php_version }}-bcmath'
-  - 'php{{ firefly_php_version }}-imap'
-  - 'php{{ firefly_php_version }}-ldap'
-  - 'php{{ firefly_php_version }}-intl'
+firefly_role_mysql_packages:
+  - 'php{{ firefly_role_validate_php_version }}-mysql'
+
+firefly_role_postgres_packages:
+  - 'php{{ firefly_role_validate_php_version }}-pgsql'
+
+firefly_role_sqlite_packages:
+  - 'php{{ firefly_role_validate_php_version }}-sqlite3'
+
+firefly_role_redis_packages:  # Includes redis-server, redis-tools.
+  - 'redis'
+
+firefly_role_memcached_packages:
+  - 'memcached'
+  - 'libmemcached-tools'
+
+firefly_role_apt_sury_url:
+  'https://packages.sury.org/debsuryorg-archive-keyring.deb'
+
+firefly_role_apt_sury_dest:
+  '/usr/share/keyrings/debsuryorg-archive-keyring.gpg'
+
+firefly_role_apt_sources:
+  - name: 'sury'
+    types:
+      - 'deb'
+    uris: 'https://packages.sury.org/php'
+    suites:
+      - 'trixie'
+    components:
+      - 'main'
+    signed_by: '{{ firefly_role_apt_sury_dest }}'
+
+###############################################################################
+# Firefly III
+###############################################################################
+# Installed with a self-contained LEMP stack.
+#
+# Reference:
+# * https://github.com/firefly-iii/firefly-iii/
+# * https://docs.firefly-iii.org/explanation/more-information/signatures
+
+firefly_role_repo_owner: 'firefly-iii'
+firefly_role_repo_repo: 'firefly-iii'
+firefly_role_repo_asset: 'FireflyIII-{VERSION}.tar.gz'
+firefly_role_repo_extract_dir: '/opt/firefly'
+firefly_role_repo_extract_symlink: '/opt/firefly/firefly'
 
 ###############################################################################
 # Default Firefly User Group
 ###############################################################################
 # Default group settings if an firefly user is force created.
 
-firefly_default_group:
+firefly_role_group:
   name: 'www-data'
-  gid:  33
+  gid: 33
 
 ###############################################################################
 # Default Firefly User Account
@@ -45,16 +145,16 @@ firefly_default_group:
 #
 # Logins are disabled.
 
-firefly_default_user:
-  name:            'www-data'
-  group:           'www-data'
-  uid:             33
-  shell:           '/usr/sbin/nologin'
-  home:            '/var/www'
-  comment:         'www-data'
-  create_home:     false
-  password:        '!'
-  password_lock:   true
+firefly_role_user:
+  name: 'www-data'
+  group: 'www-data'
+  uid: 33
+  shell: '/usr/sbin/nologin'
+  home: '/var/www'
+  comment: 'firefly web service'
+  create_home: false
+  password: '!'
+  password_lock: true
   update_password: 'always'
-  expires:         -1
-  system:          true
+  expires: -1
+  system: true

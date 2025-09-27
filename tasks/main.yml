@@ -1,7 +1,15 @@
 ---
-- ansible.builtin.import_tasks: core.yml
-- ansible.builtin.import_tasks: composer.yml
-- ansible.builtin.import_tasks: nginx.yml
-- ansible.builtin.import_tasks: install.yml
-- ansible.builtin.import_tasks: database.yml
-- ansible.builtin.import_tasks: remove_old.yml
+- name: 'Assert'
+  ansible.builtin.import_tasks: 'assert.yml'
+- name: 'Annotate'
+  ansible.builtin.import_tasks: 'annotate.yml'
+- name: 'Prep'
+  ansible.builtin.import_tasks: 'prep.yml'
+- name: 'Install'
+  ansible.builtin.import_tasks: 'install.yml'
+- name: 'Storage'
+  ansible.builtin.import_tasks: 'storage.yml'
+- name: 'Config'
+  ansible.builtin.import_tasks: 'config.yml'
+- name: 'Validate'
+  ansible.builtin.import_tasks: 'validate.yml'

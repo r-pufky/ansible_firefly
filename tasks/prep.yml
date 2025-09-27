@@ -1,0 +1,78 @@
+---
+###############################################################################
+# Prep
+###############################################################################
+# Create user if needed and determine UID/GID for potential remote filesystems.
+# Stop services if they exist and generate requirements for installation.
+#
+# Generates:
+#   _firefly: dict - Role runtime specific config.
+#
+# Reference:
+# * https://docs.firefly-iii.org/how-to/firefly-iii/installation/self-managed/
+
+- name: 'Prep | manage users'
+  when: _firefly_srv_create_user.raw
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.users'
+    tasks_from: 'role_account_add.yml'
+  vars:
+    users_role_user: '{{ firefly_role_user }}'
+    users_role_group: '{{ firefly_role_group }}'
+
+- name: 'Prep | enumerate system user {{ _firefly_srv_user.raw }}'
+  ansible.builtin.user:
+    name: '{{ _firefly_srv_user.raw }}'
+  check_mode: true
+  changed_when: false
+  register: _firefly_srv_user_query
+
+- name: 'Prep | parse system user UID/GID'
+  ansible.builtin.set_fact:
+    _firefly_srv_user: '{{
+        _firefly_srv_user |
+        combine({"role_uid": _firefly_srv_user_query.uid})
+      }}'
+    _firefly_srv_group: '{{
+        _firefly_srv_group |
+        combine({"role_gid": _firefly_srv_user_query.group})
+      }}'
+
+- name: 'Prep | query keyring deb.sury.org'
+  ansible.builtin.stat:
+    path: '{{ firefly_role_apt_sury_dest }}'
+  register: _firefly_keyring
+
+- name: 'Prep | add keyring deb.sury.org'
+  when: not _firefly_keyring.stat.exists
+  ansible.builtin.apt:
+    deb: '{{ firefly_role_apt_sury_url }}'
+
+- name: 'Install | resolve install symlink'
+  ansible.builtin.stat:
+    path: '{{ firefly_role_repo_extract_symlink }}'
+  register: _firefly_link
+
+- name: 'Prep | generate runtime config'
+  ansible.builtin.set_fact:
+    _firefly:
+      installed: '{{ _firefly_link.stat.exists }}'
+      previous_version: '{{
+          _firefly_link.stat.lnk_target | default("-") | split("-") | last
+        }}'
+      root: '{{ firefly_role_repo_extract_symlink }}'
+      storage: '{{ firefly_role_repo_extract_symlink ~ "/storage/" }}'
+      logs: '{{ firefly_role_repo_extract_symlink ~ "/storage/logs/*.log" }}'
+      fpm_service:
+        '{{ "php" ~ firefly_role_validate_php_version ~ "-fpm.service" }}'
+
+- name: 'Prep | stop services'
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    state: 'stopped'
+  failed_when: false
+  loop:
+    - 'nginx.service'
+    - '{{ _firefly.fpm_service }}'
+    - 'redis-server.service'
+    - 'memcached.service'

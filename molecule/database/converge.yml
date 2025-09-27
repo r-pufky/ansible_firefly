@@ -1,0 +1,20 @@
+---
+- name: 'Converge'
+  hosts: 'firefly-debian-13-database_postgres'
+  gather_facts: false
+  tasks:
+    - name: 'Converge | apply r_pufky.srv.firefly'
+      ansible.builtin.include_role:
+        name: 'r_pufky.srv.firefly'
+      vars:
+        firefly_cfg_db_connection: 'pgsql'
+
+- name: 'Converge'
+  hosts: 'firefly-debian-13-database_mysql'
+  gather_facts: false
+  tasks:
+    - name: 'Converge | apply r_pufky.srv.firefly'
+      ansible.builtin.include_role:
+        name: 'r_pufky.srv.firefly'
+      vars:
+        firefly_cfg_db_connection: 'mysql'

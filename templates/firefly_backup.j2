@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+# Backup & compress Firefly storage.
+#
+set -e
+DATE_STAMP=`date +%Y-%m-%d`
+OWNER='{{ _firefly_srv_user.raw }}'
+GROUP='{{ _firefly_srv_group.raw }}'
+TARGET='{{ _firefly_srv_backup_dir.raw }}/${DATE_STAMP}.tar.xz'
+
+tar -I "xz -9" -cf "${TARGET}" "{{ _firefly.storage }}" 2>/dev/null
+chown ${OWNER}:${GROUP} "${TARGET}" 2>/dev/null || true
+chmod o-rwx "${TARGET}" 2>/dev/null || true

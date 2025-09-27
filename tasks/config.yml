@@ -1,0 +1,218 @@
+---
+###############################################################################
+# Config
+###############################################################################
+# Set NGINX php-fpm configuration and PHP memory limit for scripts. Enable log
+# rotation and initialize/upgrade the database. Only the configured database
+# backend should be set otherwise code paths for each DB will execute and lead
+# to unintelligible errors.
+#
+# Database upgrade migration steps are different from initialization. Backend
+# migrations (SQLite/Postgres/MySQL) must be done manually and are not
+# supported by Firefly. Skeleton database must be setup EXTERNALLY before role
+# is applied:
+#
+#   Postgres:
+#     CREATE USER firefly_user WITH PASSWORD 'your_password';
+#     CREATE DATABASE firefly_db OWNER firefly_user;
+#     GRANT ALL PRIVILEGES ON DATABASE firefly_db TO firefly_user;
+#
+#   mysql:
+#     CREATE DATABASE fireflyiii;
+#     CREATE
+#       USER 'firefly'@'localhost'
+#       IDENTIFIED WITH mysql_native_password
+#       BY 'dbuserpassword';
+#     GRANT ALL PRIVILEGES ON fireflyiii.* TO 'firefly'@'localhost';
+#     FLUSH PRIVILEGES;
+#
+#   Sqlite:
+#     touch /opt/firefly/firefly/storage/database/database.sqlite
+#
+# Reference:
+# * https://docs.firefly-iii.org/how-to/firefly-iii/installation/self-managed
+# * https://docs.firefly-iii.org/how-to/firefly-iii/upgrade/self-managed
+
+
+# TODO(role): Migrate to r_pufky.deb.nginx when released.
+- name: 'Config | remove NGINX defaults'
+  ansible.builtin.file:
+    path: '{{ item }}'
+    state: 'absent'
+  loop:
+    - '/var/www/html/index.nginx-debian.html'
+    - '/etc/nginx/sites-enabled/default'
+
+- name: 'Config | set NGINX config'
+  ansible.builtin.template:
+    src: 'firefly.conf.j2'
+    dest: '/etc/nginx/sites-available/firefly'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+
+- name: 'Config | link NGINX config'
+  ansible.builtin.file:
+    src: '/etc/nginx/sites-available/firefly'
+    path: '/etc/nginx/sites-enabled/firefly'
+    state: 'link'
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+
+- name: 'Config | set PHP memory limit'
+  ansible.builtin.lineinfile:
+    path: '/etc/php/{{ firefly_role_validate_php_version }}/fpm/php.ini'
+    regexp: '^memory_limit = '
+    line: '{{ "memory_limit = " ~ _firefly_srv_php_memory_limit.raw ~ "M" }}'
+  changed_when: false
+
+- name: 'Config | set environment'
+  ansible.builtin.template:
+    src: 'firefly.env.j2'
+    dest: '{{ firefly_role_repo_extract_symlink }}/.env'
+    owner: '{{ _firefly_srv_user.role_uid }}'
+    group: '{{ _firefly_srv_group.role_gid }}'
+    mode: '0640'
+
+- name: 'Config | set logrotate'
+  ansible.builtin.include_role:
+    name: 'r_pufky.deb.logrotate'
+  vars:
+    logrotate_local:
+      - service: 'firefly'
+        state: 'present'
+        config:
+          - logs:
+              - '{{ _firefly.logs }}'
+            rotate:
+              period: 'weekly'
+              missing_ok: true
+              count: 2
+              compress: true
+              if_empty: false
+              shared_scripts: true
+              max_age: 60
+
+- name: 'Config | initialize database'
+  when: _firefly_srv_initialize_database_enable.raw and not _firefly.installed
+  ansible.builtin.command: '/usr/bin/php artisan {{ item }}'
+  args:
+    chdir: '{{ _firefly.root }}'
+  changed_when: false
+  become: true
+  become_user: '{{ _firefly_srv_user.raw }}'
+  loop:
+    - 'firefly-iii:upgrade-database'
+    - 'firefly-iii:correct-database'
+    - 'firefly-iii:report-integrity'
+    - 'firefly-iii:laravel-passport-keys'
+
+- name: 'Config | upgrade database'
+  when: >
+    _firefly.previous_version != _firefly_srv_version.raw and
+    _firefly.installed
+  ansible.builtin.command: '/usr/bin/php artisan {{ item }}'
+  args:
+    chdir: '{{ _firefly.root }}'
+  changed_when: false
+  become: true
+  become_user: '{{ _firefly_srv_user.raw }}'
+  loop:
+    - 'migrate --seed'
+    - 'cache:clear'
+    - 'view:clear'
+    - 'firefly-iii:upgrade-database'
+    - 'firefly-iii:laravel-passport-keys'
+
+- name: 'Config | database background queue driver'
+  when: _firefly_cfg_app_queue_driver.raw == 'database'
+  ansible.builtin.command: '/usr/bin/php artisan queue:table'
+  args:
+    chdir: '{{ _firefly.root }}'
+  changed_when: false
+  become: true
+  become_user: '{{ _firefly_srv_user.raw }}'
+
+- name: 'Config | enable backups'
+  when: _firefly_srv_backup_enable.raw
+  block:
+    - name: 'Config | enable backups | set backup directory'
+      ansible.builtin.file:
+        dest: '{{ _firefly_srv_backup_dir.raw }}'
+        owner: '{{ _firefly_srv_user.role_uid }}'
+        group: '{{ _firefly_srv_group.role_gid }}'
+        mode: '0750'
+        state: 'directory'
+      become: true
+      become_user: '{{
+          _firefly_srv_user.raw
+          if _firefly_srv_user_data_manage_enable.raw else
+          "root"
+        }}'
+
+    - name: 'Config | enable backups | set backup script'
+      ansible.builtin.template:
+        src: 'firefly_backup.j2'
+        dest: '{{ _firefly_srv_backup_enable.role_backup_script }}'
+        owner: '{{ _firefly_srv_user.role_uid }}'
+        group: '{{ _firefly_srv_group.role_gid }}'
+        mode: '0750'
+      become: true
+      become_user: '{{
+          _firefly_srv_user.raw
+          if _firefly_srv_user_data_manage_enable.raw else
+          "root"
+        }}'
+
+    - name: 'Config | enable backups | create backup service'
+      ansible.builtin.include_role:
+        name: 'r_pufky.deb.systemd'
+      vars:
+        systemd_services:
+          - name: 'firefly_backup'
+            state: 'present'
+            drop_in: false
+            unit:
+              description: 'Firefly backup service.'
+              requires: ['firefly_backup.timer']
+            service:
+              type: 'oneshot'
+              exec_start:
+                - '{{ _firefly_srv_backup_enable.role_backup_script }}'
+            exec:
+              user: 'root'
+              group: 'root'
+        systemd_timers:
+          - name: 'firefly_backup'
+            state: 'present'
+            drop_in: false
+            unit:
+              description: 'Firefly backup service timer.'
+            timer:
+              unit: 'firefly_backup.service'
+              on_calendar:
+                - '{{ _firefly_srv_backup_schedule.raw }}'
+            install:
+              wanted_by: ['timers.target']
+
+- name: 'Config | disable backups'
+  when: not _firefly_srv_backup_enable.raw
+  block:
+    - name: 'Config | disable backups | remove backup script'
+      ansible.builtin.file:
+        dest: '{{ _firefly_srv_backup_enable.role_backup_script }}'
+        state: 'absent'
+
+    - name: 'Config | disable backups | remove backup service'
+      ansible.builtin.include_role:
+        name: 'r_pufky.deb.systemd'
+      vars:
+        systemd_services:
+          - name: 'firefly_backup'
+            state: 'absent'
+            drop_in: false
+        systemd_timers:
+          - name: 'firefly_backup'
+            state: 'absent'
+            drop_in: false

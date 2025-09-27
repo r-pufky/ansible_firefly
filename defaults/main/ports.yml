@@ -2,10 +2,14 @@
 ###############################################################################
 # Ports Configuration
 ###############################################################################
-# Ports should be managed externally via an OS role.
+# Manage firewall with r_pufky.deb.ufw.
 #
 # Reference:
-# * https://docs.ansible.com/ansible/latest/collections/community/general/ufw_module.html
+# * https://github.com/r-pufky/ansible_ufw
 
-ports:
-  - {proto: 'tcp', from_ip: 'any', to_port: 80, direction: 'in', comment: 'firefly http'}
+firefly_srv_ports:
+  - proto: 'tcp'
+    from_ip: 'any'
+    to_port: 80
+    direction: 'in'
+    comment: 'Firefly HTTP'

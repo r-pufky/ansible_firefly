@@ -1,0 +1,81 @@
+---
+###############################################################################
+# Authentication
+###############################################################################
+# Reference:
+# * https://docs.firefly-iii.org/how-to/firefly-iii/advanced/authentication/
+
+# Authentication method.
+#
+# Values:
+#                 web: Use database (default).
+#   remote_user_guard: Use third-party authentication.
+#
+# Default: 'web'.
+firefly_cfg_auth_authentication_guard: 'web'
+
+# Remote user guard header.
+#
+# Requires firefly_cfg_auth_authentication_guard=remote_user_guard.
+#
+# Default: 'REMOTE_USER'.
+firefly_cfg_auth_authentication_guard_header: 'REMOTE_USER'
+
+# Remote user guard email.
+#
+# Requires firefly_cfg_auth_authentication_guard=remote_user_guard.
+#
+# Default: ''.
+firefly_cfg_auth_authentication_guard_email: ''
+
+# Oauth token generation private key.
+#
+# Stored in storage/oauth-private.key.
+#
+# Values:
+#   {KEY}: Private key to use.
+#      '': Autogenerate private key (default).
+#
+# Default: '' (auto generate).
+firefly_cfg_auth_passport_private_key: ''
+
+# Oauth token generation public key.
+#
+# Stored in storage/oauth-public.key.
+#
+# Values:
+#   {KEY}: Public key to use.
+#      '': Autogenerate public key (default).
+#
+# Default: '' (auto generate).
+firefly_cfg_auth_passport_public_key: ''
+
+# External authentication logout URL.
+#
+# Requires firefly_cfg_auth_authentication_guard=remote_user_guard.
+#
+# Default: '' (disabled).
+firefly_cfg_auth_custom_logout_url: ''
+
+###############################################################################
+# Cron
+###############################################################################
+
+# Static cron job token.
+#
+# Use this token in cron URL instead of a user's command line token found in
+# /profile.
+#
+# Values:
+#   {TOKEN}: 32 character alphanumeric token.
+#
+# Default: {RANDOM}.
+#
+# Reference:
+# * https://docs.firefly-iii.org/how-to/firefly-iii/advanced/cron/
+firefly_cfg_auth_static_cron_token: '{{
+    lookup("ansible.builtin.password",
+           "/dev/null",
+           chars=["ascii_lowercase", "ascii_uppercase", "digits"],
+           length=32)
+  }}'

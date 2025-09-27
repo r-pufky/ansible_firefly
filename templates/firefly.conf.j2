@@ -1,15 +1,25 @@
+{% if _firefly_srv_nginx_httpoxy_mitigation.raw %}
+# Mitigate HTTPoxy attacks:  https://httpoxy.org/.
+fastcgi_param HTTP_PROXY "";
+{% endif %}
+
 server {
   listen       80 default_server;
-  server_name  {{ inventory_hostname }} {{ inventory_hostname_short }};
-  root         /var/www/html/firefly-iii/public;
-  index index.html index.htm index.php;
+{% if _firefly_srv_nginx_ipv6_enable.raw %}
+  listen       [::]:80;
+{% endif %}
+  server_name  {{ _firefly_srv_nginx_server_name.raw }};
+  root         {{ _firefly.root }}/public;
+  index        index.html index.htm index.php;
 
   location / {
-    try_files $uri /index.php$is_args$args;
+     try_files $uri $uri/ /index.php?$query_string;
+     autoindex on;
+     sendfile off;
   }
 
   location ~ \.php$ {
-    fastcgi_pass unix:/run/php/php{{ firefly_php_version }}-fpm.sock;
+    fastcgi_pass unix:/run/php/php{{ firefly_role_validate_php_version }}-fpm.sock;
     fastcgi_index index.php;
     fastcgi_read_timeout 240;
     fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;

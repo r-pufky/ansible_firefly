@@ -1,0 +1,42 @@
+---
+- name: 'Prepare'
+  hosts: 127.0.0.1
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: 'Prepare | create cache'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'create_cache.yml'
+      vars:
+        test_name: 'Prepare | create cache'
+
+    - name: 'Prepare | check cache'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'cache_url.yml'
+      vars:
+        test_name: 'Prepare | cache {{ item }}'
+        test_dest: '{{ item }}'
+        test_url: '{{
+            "https://github.com/firefly-iii/firefly-iii/releases/download/" ~
+            "v6.4.0/" ~
+            item
+          }}'
+        test_mode: '0640'
+      loop:
+        - 'FireflyIII-v6.4.0.tar.gz'
+        - 'FireflyIII-v6.4.0.tar.gz.asc'
+        - 'FireflyIII-v6.4.0.tar.gz.sha256'
+
+- name: 'Prepare'
+  hosts: 'firefly-debian-13-user_data'
+  gather_facts: false
+  tasks:
+    - name: 'Prepare | simulate user media restriction'
+      ansible.builtin.file:
+        path: '/data'
+        owner: 33
+        group: 33
+        mode: '0755'
+        state: 'directory'

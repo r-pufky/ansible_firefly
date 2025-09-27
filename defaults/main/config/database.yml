@@ -1,0 +1,224 @@
+---
+###############################################################################
+# Database Connection
+###############################################################################
+# Database upgrade migrations are done automatically with new versions.
+# Database backend migrations (SQLite/Postgres/MySQL) must be done manually and
+# are not supported by Firefly.
+#
+# Skeleton database must be setup before role is applied. See
+# r_rpufky.srv.{maria,postgres} to mange this:
+#
+#   Postgres:
+#     CREATE USER firefly_user WITH PASSWORD 'your_password';
+#     CREATE DATABASE firefly OWNER firefly_user;
+#     GRANT ALL PRIVILEGES ON DATABASE firefly TO firefly_user;
+#
+#   mysql:
+#     CREATE DATABASE firefly;
+#     CREATE
+#       USER 'firefly'@'localhost'
+#       IDENTIFIED WITH mysql_native_password
+#       BY 'dbuserpassword';
+#     GRANT ALL PRIVILEGES ON firefly.* TO 'firefly'@'localhost';
+#     FLUSH PRIVILEGES;
+#
+#   Sqlite:
+#     touch /opt/firefly/firefly/storage/database/database.sqlite
+#
+# Reference:
+# * https://docs.firefly-iii.org/how-to/firefly-iii/installation/self-managed
+
+# Database encryption key.
+#
+# Special Case:
+# * Re-keying is not natively supported by Firefly - it must be done manually.
+# * 32 characters/bytes; do not use #.
+#
+# Default: {RANDOM}.
+#
+# Reference:
+# * https://github.com/firefly-iii/firefly-iii/issues/1095
+firefly_cfg_db_app_key: '{{
+    lookup("ansible.builtin.password",
+           "/dev/null",
+           chars=["ascii_lowercase", "ascii_uppercase", "digits"],
+           length=32)
+  }}'
+
+# Database connection.
+#
+# Values:
+#    pgsql: Postgres. HIGHLY recommended (default).
+#    mysql: MariaDB.
+#   sqlite: Sqlite3 (database automatically created if non-existent).
+#
+# Default: 'sqlite'.
+firefly_cfg_db_connection: 'sqlite'
+
+###############################################################################
+# Shared (PostgreSQL & MySQL) Database Options
+###############################################################################
+
+
+# Database host (IP or Hostname). Default: 'localhost'.
+firefly_cfg_db_host: 'localhost'
+
+# Database port. Default: 5432.
+firefly_cfg_db_port: 5432
+
+# Database name. Default: 'firefly'.
+firefly_cfg_db_database: 'firefly'
+
+# Database user.
+#
+# User must have root privileges on database.
+#
+# Default: 'firefly'.
+firefly_cfg_db_username: 'firefly'
+
+# Database password. Default: {RANDOM}.
+firefly_cfg_db_password: '{{
+    lookup("ansible.builtin.password",
+           "/dev/null",
+           chars=["ascii_lowercase", "ascii_uppercase", "digits"],
+           length=32)
+  }}'
+
+# Database unix socket. Default: '' (disabled).
+firefly_cfg_db_socket: ''
+
+###############################################################################
+# MySQL Specific Options
+###############################################################################
+
+# Enable SSL? Default: False.
+firefly_cfg_db_mysql_use_ssl: false
+
+# Validate SSL certificate? Default: True.
+firefly_cfg_db_mysql_ssl_verify_server_cert: true
+
+# Trusted SSL CA Certificate path (PEM format). Default: '/etc/ssl/certs/'.
+firefly_cfg_db_mysql_ssl_capath: '/etc/ssl/certs/'
+
+# SSL certificate authority (CA).
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/ca.pem with correct permissions.
+#
+# firefly_cfg_db_mysql_ssl_ca: 'host_vars/firefly.example.com/data/ca.pem'
+#
+# Default: '' (use firefly_cfg_db_mysql_ssl_capath).
+firefly_cfg_db_mysql_ssl_ca: ''
+
+# SSL certificate.
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/ssl.cert with correct permissions.
+#
+# firefly_cfg_db_mysql_ssl_cert: 'host_vars/firefly.example.com/data/cert.pem'
+#
+# Default: '' (disabled).
+firefly_cfg_db_mysql_ssl_cert: ''
+
+# SSL certificate key.
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/ssl.key with correct permissions.
+#
+# firefly_cfg_db_mysql_ssl_key: 'host_vars/firefly.example.com/data/key.pem'
+#
+# Default: '' (disabled).
+firefly_cfg_db_mysql_ssl_key: ''
+
+# List of SSL Ciphers to use (OpenSSL format).
+#
+# firefly_cfg_db_mysql_ssl_cipher:
+#   - 'TLSv1.2'
+#   - 'DHE-RSA-AES256-SHA'
+#   - 'AES128-SHA'
+#
+# Default: '' (disabled).
+firefly_cfg_db_mysql_ssl_cipher: []
+
+###############################################################################
+# PostgreSQL Specific Options
+###############################################################################
+
+# PostgreSQL SSL service negotiation mode.
+#
+# Values:
+#         allow: Allow SSL if provided.
+#       disable: Disable SSL.
+#        prefer: Prefer SSL if available (default).
+#       require: Require SSL (no CA verification).
+#     verify-ca: Require SSL with CA verification. libpq will verify
+#                that the server is trustworthy by checking the
+#                certificate chain up to the root certificate stored on
+#                the client.
+#   verify-full: Require SSL with Full chain VA verification. libpq
+#                will also verify that the server host name matches the
+#                name stored in the server certificate.
+#
+# Default: 'prefer' (default).
+firefly_cfg_db_pgsql_ssl_mode: 'prefer'
+
+#   ssl_cert: str - Location of the client SSL certificate.
+#       Default: omit.
+#   ssl_key: str - Location of secret key used for the client certificate.
+#       Default: omit.
+
+# SSL root certificate.
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/ca.pem with correct permissions.
+#
+# firefly_cfg_db_pgsql_ssl_root_cert:
+#   'host_vars/firefly.example.com/data/ca.pem'
+#
+# Default: 'null' (disabled).
+firefly_cfg_db_pgsql_ssl_root_cert: 'null'
+
+# SSL certificate.
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/cert.pem with correct permissions.
+#
+# firefly_cfg_db_pgsql_ssl_cert: 'host_vars/firefly.example.com/data/cert.pem'
+#
+# Default: 'null' (disabled).
+firefly_cfg_db_pgsql_ssl_cert: 'null'
+
+# SSL certificate key.
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/key.pem with correct permissions.
+#
+# firefly_cfg_db_pgsql_ssl_key: 'host_vars/firefly.example.com/data/key.pem'
+#
+# Default: 'null' (disabled).
+firefly_cfg_db_pgsql_ssl_key: 'null'
+
+# SSL CRL (certificate revocation list) certificate.
+#
+# Sourced from ansible controller; automatically placed in
+# firefly_srv_storage_dir/certs/crl.pem with correct permissions.
+#
+# firefly_cfg_db_pgsql_ssl_crl_file:
+#   'host_vars/firefly.example.com/data/crl.pem'
+#
+# Default: 'null' (disabled).
+firefly_cfg_db_pgsql_ssl_crl_file: 'null'
+
+# PostgreSQL schema to use.
+#
+# Special Case (version):
+#   <15: Public schema has both CREATE and USAGE privileges.
+#   15+: Public schema has only USAGE privileges. Users other than the
+#        database owner cannot create objects in schema without explicit
+#        grants due to security considerations. This may be changed with:
+#
+#          GRANT CREATE ON SCHEMA public TO your_username;
+#
+# Default: 'public'.
+firefly_cfg_db_pgsql_schema: 'public'

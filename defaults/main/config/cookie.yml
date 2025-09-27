@@ -1,0 +1,27 @@
+---
+###############################################################################
+# Firefly Service Configuration
+###############################################################################
+
+# Cookie path. Default: '/'.
+firefly_cfg_cookie_path: '/'
+
+# Cookie domain. Default: ''.
+firefly_cfg_cookie_domain: ''
+
+# Use secure cookies? Default: False.
+firefly_cfg_cookie_secure: false
+
+# Same site policy.
+#
+# Values:
+#   strict: Strict same-site policy - access from a single domain. Use this
+#           option if no links from external websites navigate directly to
+#           logged-in pages.
+#      lax: Lax same-site policy - access from multiple domains. Use this
+#           option if links from external websites navigate directly to
+#           logged-in pages. If users are being logged out unexpectedly after
+#           clicking links from other sources, enable this.
+#
+# Default: 'lax'.
+firefly_cfg_cookie_samesite: lax
