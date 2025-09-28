@@ -2,10 +2,10 @@
 ###############################################################################
 # Config
 ###############################################################################
-# Set NGINX php-fpm configuration and PHP memory limit for scripts. Enable log
-# rotation and initialize/upgrade the database. Only the configured database
-# backend should be set otherwise code paths for each DB will execute and lead
-# to unintelligible errors.
+# Set NGINX php-fpm configuration and PHP memory limit for scripts if enabled.
+# Enable log rotation and initialize/upgrade the database. Only the configured
+# database backend should be set otherwise code paths for each DB will execute
+# and lead to unintelligible errors.
 #
 # Database upgrade migration steps are different from initialization. Backend
 # migrations (SQLite/Postgres/MySQL) must be done manually and are not
@@ -33,9 +33,8 @@
 # * https://docs.firefly-iii.org/how-to/firefly-iii/installation/self-managed
 # * https://docs.firefly-iii.org/how-to/firefly-iii/upgrade/self-managed
 
-
-# TODO(role): Migrate to r_pufky.deb.nginx when released.
 - name: 'Config | remove NGINX defaults'
+  when: _firefly_srv_nginx_install_enable.raw
   ansible.builtin.file:
     path: '{{ item }}'
     state: 'absent'
@@ -44,6 +43,7 @@
     - '/etc/nginx/sites-enabled/default'
 
 - name: 'Config | set NGINX config'
+  when: _firefly_srv_nginx_install_enable.raw
   ansible.builtin.template:
     src: 'firefly.conf.j2'
     dest: '/etc/nginx/sites-available/firefly'
@@ -52,6 +52,7 @@
     mode: '0644'
 
 - name: 'Config | link NGINX config'
+  when: _firefly_srv_nginx_install_enable.raw
   ansible.builtin.file:
     src: '/etc/nginx/sites-available/firefly'
     path: '/etc/nginx/sites-enabled/firefly'

@@ -146,6 +146,17 @@
       deprecated: false,
       order: 8,
     }
+    _firefly_srv_nginx_install_enable: {
+      section: '',
+      key: '',
+      raw: '{{ firefly_srv_nginx_install_enable }}',
+      default: true,
+      hint: 'bool',
+      added: '6.4.0',
+      sensitive: false,
+      deprecated: false,
+      order: 9,
+    }
     _firefly_srv_nginx_httpoxy_mitigation: {
       section: '',
       key: '',
@@ -155,7 +166,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 9,
+      order: 10,
     }
     _firefly_srv_nginx_ipv6_enable: {
       section: '',
@@ -166,7 +177,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 10,
+      order: 11,
     }
     _firefly_srv_nginx_server_name: {
       section: '',
@@ -177,7 +188,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 11,
+      order: 12,
     }
     _firefly_srv_php_memory_limit: {
       section: '',
@@ -188,7 +199,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 12,
+      order: 13,
     }
     _firefly_srv_backup_enable: {
       section: '',
@@ -203,7 +214,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 13,
+      order: 14,
     }
     _firefly_srv_backup_dir: {
       section: '',
@@ -214,7 +225,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 14,
+      order: 15,
     }
     _firefly_srv_backup_owner: {
       section: '',
@@ -225,7 +236,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 15,
+      order: 16,
     }
     _firefly_srv_backup_group: {
       section: '',
@@ -236,7 +247,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 16,
+      order: 17,
     }
     _firefly_srv_backup_schedule: {
       section: '',
@@ -247,7 +258,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 17,
+      order: 18,
     }
     _firefly_srv_user: {
       section: '',
@@ -258,7 +269,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 18,
+      order: 19,
     }
     _firefly_srv_group: {
       section: '',
@@ -269,7 +280,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 19,
+      order: 20,
     }
     _firefly_srv_user_data_manage_enable: {
       section: '',
@@ -280,7 +291,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 20,
+      order: 21,
     }
     _firefly_srv_create_user: {
       section: '',
@@ -291,7 +302,7 @@
       added: '6.4.0',
       sensitive: false,
       deprecated: false,
-      order: 21,
+      order: 22,
     }
 
 - name: 'Annotate | sanitize & annotate config defaults'

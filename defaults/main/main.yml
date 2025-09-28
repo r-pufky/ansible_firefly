@@ -113,10 +113,17 @@ firefly_srv_force_config_only_enable: false
 ###############################################################################
 # NGINX Options
 ###############################################################################
-# Options are applied directly to firefly NGINX configuration.
+
+# Enable NGINX Installation?
 #
-# Reference:
-# * https://nginx.org/en/docs/
+# Install and configure NGINX for Firefly. Disable to prevent installation and
+# configuration of NGINX site. This option should be used for custom NGINX
+# deployments (e.g. SSL, subdomain, and path-based configuration).
+#
+# Role always asserts NGINX is running during validation.
+#
+# Default: True.
+firefly_srv_nginx_install_enable: true
 
 # Enable HTTPoxy mitigation?
 #

@@ -27,6 +27,11 @@
     apt_packages:
       - '{{ firefly_role_packages }}'
       - '{{
+          firefly_role_nginx_packages
+          if _firefly_srv_nginx_install_enable.raw else
+          []
+        }}'
+      - '{{
           firefly_role_mysql_packages
           if _firefly_cfg_db_connection.raw == "mysql" else
           []

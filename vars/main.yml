@@ -69,7 +69,6 @@ firefly_role_validate_php_version: '8.4'
 firefly_role_packages:
   - 'locales'
   - 'gnupg2'
-  - 'nginx'
   - 'xz-utils'  # tar.xz backups.
   - 'php{{ firefly_role_validate_php_version }}'
   - 'php{{ firefly_role_validate_php_version }}-fpm'
@@ -80,6 +79,9 @@ firefly_role_packages:
   - 'php{{ firefly_role_validate_php_version }}-gd'
   - 'php{{ firefly_role_validate_php_version }}-xml'
   - 'php{{ firefly_role_validate_php_version }}-mbstring'
+
+firefly_role_nginx_packages:
+  - 'nginx'
 
 firefly_role_mysql_packages:
   - 'php{{ firefly_role_validate_php_version }}-mysql'
