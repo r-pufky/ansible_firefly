@@ -31,11 +31,11 @@
   ansible.builtin.set_fact:
     _firefly_srv_user: '{{
         _firefly_srv_user |
-        combine({"role_uid": _firefly_srv_user_query.uid})
+        combine({"_uid": _firefly_srv_user_query.uid})
       }}'
     _firefly_srv_group: '{{
         _firefly_srv_group |
-        combine({"role_gid": _firefly_srv_user_query.group})
+        combine({"_gid": _firefly_srv_user_query.group})
       }}'
 
 - name: 'Prep | query keyring deb.sury.org'

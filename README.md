@@ -43,21 +43,21 @@ backups.
   roles:
      - 'r_pufky.srv.firefly'
   vars:
-  firefly_srv_redis_enable: false
-  firefly_srv_memcached_enable: true
-  firefly_cfg_app_session_driver: 'memcached'
-  firefly_cfg_app_cache_driver: 'memcached'
-  firefly_cfg_db_connection: 'pgsql'
-  firefly_cfg_db_host: '192.168.0.10'
-  firefly_cfg_db_port: 5432
-  firefly_cfg_db_database: 'firefly'
-  firefly_cfg_db_username: 'firefly'
-  firefly_cfg_db_password: '{PASSWORD}'
-  firefly_srv_backup_dir: '/data/firefly/backup'
-  firefly_srv_backup_enable: true
-  firefly_srv_backup_schedule: 'weekly'
-  firefly_cfg_auth_static_cron_token: '{CRON TOKEN}'
-  firefly_cfg_db_app_key: '{DB_APP_KEY}'
+    firefly_srv_redis_enable: false
+    firefly_srv_memcached_enable: true
+    firefly_cfg_app_session_driver: 'memcached'
+    firefly_cfg_app_cache_driver: 'memcached'
+    firefly_cfg_db_connection: 'pgsql'
+    firefly_cfg_db_host: '192.168.0.10'
+    firefly_cfg_db_port: 5432
+    firefly_cfg_db_database: 'firefly'
+    firefly_cfg_db_username: 'firefly'
+    firefly_cfg_db_password: '{PASSWORD}'
+    firefly_srv_backup_dir: '/data/firefly/backup'
+    firefly_srv_backup_enable: true
+    firefly_srv_backup_schedule: 'weekly'
+    firefly_cfg_auth_static_cron_token: '{CRON TOKEN}'
+    firefly_cfg_db_app_key: '{DB_APP_KEY}'
 ```
 
 ## Development

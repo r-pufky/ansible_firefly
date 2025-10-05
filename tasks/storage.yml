@@ -8,8 +8,8 @@
 - name: 'Storage | set storage'
   ansible.builtin.file:
     path: '{{ _firefly_srv_storage_dir.data ~ item }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0750'
     state: 'directory'
   become: true
@@ -36,17 +36,17 @@
   ansible.builtin.file:
     src: '{{ _firefly_srv_storage_dir.raw }}'
     dest: '{{ _firefly.storage }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     state: 'link'
 
 - name: 'Storage | set MySql SSL CA cert'
   when: _firefly_cfg_db_mysql_ssl_ca.raw | length > 0
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_mysql_ssl_ca.raw }}'
-    dest: '{{ _firefly_cfg_db_mysql_ssl_ca.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_mysql_ssl_ca._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -61,9 +61,9 @@
   when: _firefly_cfg_db_mysql_ssl_cert.raw | length > 0
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_mysql_ssl_cert.raw }}'
-    dest: '{{ _firefly_cfg_db_mysql_ssl_cert.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_mysql_ssl_cert._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -78,9 +78,9 @@
   when: _firefly_cfg_db_mysql_ssl_key.raw | length > 0
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_mysql_ssl_key.raw }}'
-    dest: '{{ _firefly_cfg_db_mysql_ssl_key.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_mysql_ssl_key._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -95,9 +95,9 @@
   when: _firefly_cfg_db_pgsql_ssl_root_cert.raw != 'null'
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_pgsql_ssl_root_cert.raw }}'
-    dest: '{{ _firefly_cfg_db_pgsql_ssl_root_cert.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_root_cert._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -112,9 +112,9 @@
   when: _firefly_cfg_db_pgsql_ssl_cert.raw != 'null'
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_pgsql_ssl_cert.raw }}'
-    dest: '{{ _firefly_cfg_db_pgsql_ssl_cert.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_cert._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -129,9 +129,9 @@
   when: _firefly_cfg_db_pgsql_ssl_key.raw != 'null'
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_pgsql_ssl_key.raw }}'
-    dest: '{{ _firefly_cfg_db_pgsql_ssl_key.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_key._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -146,9 +146,9 @@
   when: _firefly_cfg_db_pgsql_ssl_crl_file.raw != 'null'
   ansible.builtin.copy:
     src: '{{ _firefly_cfg_db_pgsql_ssl_crl_file.raw }}'
-    dest: '{{ _firefly_cfg_db_pgsql_ssl_crl_file.role_dest }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    dest: '{{ _firefly_cfg_db_pgsql_ssl_crl_file._dest }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0400'
     directory_mode: '0750'
     force: true
@@ -163,8 +163,8 @@
   when: _firefly_cfg_db_connection.raw == 'sqlite'
   ansible.builtin.file:
     path: '{{ _firefly.storage ~ "/database/database.sqlite" }}'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0640'
     state: 'touch'
   become: true

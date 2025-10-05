@@ -23,28 +23,8 @@
 # Only the configured database backend should be set otherwise code paths for
 # each DB will execute and lead to unintelligible errors.
 #
-# A necessary evil given the limitations of argument_spec:
-# * Strong validation and sanitization of user input.
-# * Annotated variable providing context and rendering hints.
-# * Logic updates centrally located in tasks.
-# * Simplified role updates for variable changes.
-# * All data touched by user is in a standard, expected format.
-#
-# Annotated Defaults (2.0):
-# _{VAR}: dict - Annotated and sanitized default variable.
-#   section: str - Section name.
-#   key: str - Config file key.
-#   raw: any - Raw value from user, defaults, or role defaults.
-#   data: any - Processed raw value for use in rendering. Optional.
-#   default: any - Role default (testing for changed defaults).
-#   hint: str - Value rendering type hint (docstring types).
-#   role_*: any - Role specific usage. Optional.
-#   added: str - Release version variable added.
-#       Special Case:
-#         0.0.0: Unknown or since role inception.
-#   sensitive: bool - True for PII/SPII data that should not be logged.
-#   deprecated: bool - True if no longer used in current role release.
-#   order: int - Order item should appear in templated files.
+# Use r_pufky.data.v3 data annotations to enforce consistency and validation
+# checks.
 #
 # Generates:
 #   _firefly: dict - Role runtime specific config.
@@ -56,1461 +36,1294 @@
 # * https://github.com/ansible/ansible/issues/77159
 
 - name: 'Annotate | sanitize & annotate service defaults'
-  ansible.builtin.set_fact:
-    _firefly_srv_version: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_version }}',
-      default: '{{ firefly_role_validate_version }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_srv_gpg_key_id: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_gpg_key_id }}',
-      default: 'A9D6BE866CEE3775854B1F96910CF2B5E8B6CC6E',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_srv_storage_dir: {
-      section: '',
-      key: '',
-      raw: "{{ firefly_srv_storage_dir | regex_replace('\\/$', '') }}",
-      data: "{{ firefly_srv_storage_dir | regex_replace('\\/$', '') ~ '/' }}",
-      default: '/data/firefly/storage',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_srv_redis_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_redis_enable }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_srv_memcached_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_memcached_enable }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_srv_initialize_database_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_initialize_database_enable }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_srv_delete_old_versions_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_delete_old_versions_enable }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 7,
-    }
-    _firefly_srv_force_config_only_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_force_config_only_enable }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 8,
-    }
-    _firefly_srv_nginx_install_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_nginx_install_enable }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 9,
-    }
-    _firefly_srv_nginx_httpoxy_mitigation: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_nginx_httpoxy_mitigation }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 10,
-    }
-    _firefly_srv_nginx_ipv6_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_nginx_ipv6_enable }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 11,
-    }
-    _firefly_srv_nginx_server_name: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_nginx_server_name }}',
-      default: '{{ inventory_hostname ~ " " ~ inventory_hostname_short }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 12,
-    }
-    _firefly_srv_php_memory_limit: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_php_memory_limit }}',
-      default: 512,
-      hint: 'int',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 13,
-    }
-    _firefly_srv_backup_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_backup_enable }}',
-      default: true,
-      role_backup_script: "{{
+  ansible.builtin.set_fact:  # noqa jinja[spacing] readability.
+    _firefly_srv_version: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_version,
+        default=firefly_role_validate_version,
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_srv_gpg_key_id: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_gpg_key_id,
+        default='A9D6BE866CEE3775854B1F96910CF2B5E8B6CC6E',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_srv_storage_dir: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_storage_dir | regex_replace('\\/$', ''),
+        data=firefly_srv_storage_dir | regex_replace('\\/$', '') ~ '/',
+        default='/data/firefly/storage',
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_srv_redis_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_redis_enable,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_srv_memcached_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_memcached_enable,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_srv_initialize_database_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_initialize_database_enable,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_srv_delete_old_versions_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_delete_old_versions_enable,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=7
+        )
+      }}"
+    _firefly_srv_force_config_only_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_force_config_only_enable,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=8
+        )
+      }}"
+    _firefly_srv_nginx_install_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_nginx_install_enable,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=9
+        )
+      }}"
+    _firefly_srv_nginx_httpoxy_mitigation: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_nginx_httpoxy_mitigation,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=10
+        )
+      }}"
+    _firefly_srv_nginx_ipv6_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_nginx_ipv6_enable,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=11
+        )
+      }}"
+    _firefly_srv_nginx_server_name: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_nginx_server_name,
+        default=inventory_hostname ~ ' ' ~ inventory_hostname_short,
+        hint='str',
+        added='6.4.0',
+        order=12
+        )
+      }}"
+    _firefly_srv_php_memory_limit: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_php_memory_limit,
+        default=512,
+        hint='int',
+        added='6.4.0',
+        order=13
+        )
+      }}"
+    _firefly_srv_backup_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_backup_enable,
+        default=true,
+        _backup_script=(
           firefly_srv_backup_dir | regex_replace('\\/$', '') ~ '/' ~
           'firefly_backup'
-        }}",
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 14,
-    }
-    _firefly_srv_backup_dir: {
-      section: '',
-      key: '',
-      raw: "{{ firefly_srv_backup_dir | regex_replace('\\/$', '') }}",
-      default: '/data/firefly/backup',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 15,
-    }
-    _firefly_srv_backup_owner: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_backup_owner }}',
-      default: 'root',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 16,
-    }
-    _firefly_srv_backup_group: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_backup_group }}',
-      default: 'root',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 17,
-    }
-    _firefly_srv_backup_schedule: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_backup_schedule }}',
-      default: 'weekly',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 18,
-    }
-    _firefly_srv_user: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_user }}',
-      default: 'www-data',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 19,
-    }
-    _firefly_srv_group: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_group }}',
-      default: 'www-data',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 20,
-    }
-    _firefly_srv_user_data_manage_enable: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_user_data_manage_enable }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 21,
-    }
-    _firefly_srv_create_user: {
-      section: '',
-      key: '',
-      raw: '{{ firefly_srv_create_user }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 22,
-    }
+        ),
+        hint='bool',
+        added='6.4.0',
+        order=14
+        )
+      }}"
+    _firefly_srv_backup_dir: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_backup_dir | regex_replace('\\/$', ''),
+        default='/data/firefly/backup',
+        hint='str',
+        added='6.4.0',
+        order=15
+        )
+      }}"
+    _firefly_srv_backup_owner: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_backup_owner,
+        default='root',
+        hint='str',
+        added='6.4.0',
+        order=16
+        )
+      }}"
+    _firefly_srv_backup_group: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_backup_group,
+        default='root',
+        hint='str',
+        added='6.4.0',
+        order=17
+        )
+      }}"
+    _firefly_srv_backup_schedule: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_backup_schedule,
+        default='weekly',
+        hint='str',
+        added='6.4.0',
+        order=18
+        )
+      }}"
+    _firefly_srv_user: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_user,
+        default='www-data',
+        hint='str',
+        added='6.4.0',
+        order=19
+        )
+      }}"
+    _firefly_srv_group: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_group,
+        default='www-data',
+        hint='str',
+        added='6.4.0',
+        order=20
+        )
+      }}"
+    _firefly_srv_user_data_manage_enable: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_user_data_manage_enable,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=21
+        )
+      }}"
+    _firefly_srv_create_user: "{{ {} | r_pufky.data.v3(
+        raw=firefly_srv_create_user,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=22
+        )
+      }}"
 
 - name: 'Annotate | sanitize & annotate config defaults'
-  ansible.builtin.set_fact:
-    _firefly_cfg_app_app_env: {
-      section: 'app',
-      key: 'APP_ENV',
-      raw: '{{ firefly_cfg_app_app_env | lower }}',
-      default: 'production',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_app_app_debug: {
-      section: 'app',
-      key: 'APP_DEBUG',
-      raw: '{{ firefly_cfg_app_app_debug }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_app_default_language: {
-      section: 'app',
-      key: 'DEFAULT_LANGUAGE',
-      raw: '{{ firefly_cfg_app_default_language }}',
-      data: '{{ firefly_cfg_app_default_language ~ ".UTF-8" }}',
-      default: 'en_US',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_app_default_locale: {
-      section: 'app',
-      key: 'DEFAULT_LOCALE',
-      raw: '{{ firefly_cfg_app_default_locale }}',
-      data: '{{ firefly_cfg_app_default_locale ~ ".UTF-8" }}',
-      default: 'equal',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_app_tz: {
-      section: 'app',
-      key: 'TZ',
-      raw: '{{ firefly_cfg_app_tz }}',
-      default: 'America/Los_Angeles',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_app_cache_driver: {
-      section: 'app',
-      key: 'CACHE_DRIVER',
-      raw: '{{ firefly_cfg_app_cache_driver | lower }}',
-      default: 'redis',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_app_session_driver: {
-      section: 'app',
-      key: 'SESSION_DRIVER',
-      raw: '{{ firefly_cfg_app_session_driver | lower }}',
-      default: 'redis',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 7,
-    }
-    _firefly_cfg_app_app_name: {
-      section: 'app',
-      key: 'APP_NAME',
-      raw: '{{ firefly_cfg_app_app_name }}',
-      default: 'FireflyIII',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 8,
-    }
-    _firefly_cfg_app_dkr_check_sqlite: {
-      section: 'app',
-      key: 'DKR_CHECK_SQLITE',
-      raw: '{{ firefly_cfg_app_dkr_check_sqlite }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 9,
-    }
-    _firefly_cfg_app_broadcast_driver: {
-      section: 'app',
-      key: 'BROADCAST_DRIVER',
-      raw: '{{ firefly_cfg_app_broadcast_driver | lower }}',
-      default: 'log',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 10,
-    }
-    _firefly_cfg_app_queue_driver: {
-      section: 'app',
-      key: 'QUEUE_DRIVER',
-      raw: '{{ firefly_cfg_app_queue_driver | lower }}',
-      default: 'sync',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 11,
-    }
-    _firefly_cfg_app_cache_prefix: {
-      section: 'app',
-      key: 'CACHE_PREFIX',
-      raw: '{{ firefly_cfg_app_cache_prefix }}',
-      default: 'firefly',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 12,
-    }
-    _firefly_cfg_app_demo_username: {
-      section: 'app',
-      key: 'DEMO_USERNAME',
-      raw: '{{ firefly_cfg_app_demo_username }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 13,
-    }
-    _firefly_cfg_app_demo_password: {
-      section: 'app',
-      key: 'DEMO_PASSWORD',
-      raw: '{{ firefly_cfg_app_demo_password }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 14,
-    }
-    _firefly_cfg_app_use_running_balance: {
-      section: 'app',
-      key: 'USE_RUNNING_BALANCE',
-      raw: '{{ firefly_cfg_app_use_running_balance }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 15,
-    }
-    _firefly_cfg_app_firefly_iii_layout: {
-      section: 'app',
-      key: 'FIREFLY_III_LAYOUT',
-      raw: '{{ firefly_cfg_app_firefly_iii_layout }}',
-      default: 'v1',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 16,
-    }
-    _firefly_cfg_app_query_parser_implementation: {
-      section: 'app',
-      key: 'QUERY_PARSER_IMPLEMENTATION',
-      raw: '{{ firefly_cfg_app_query_parser_implementation | lower }}',
-      default: 'new',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 17,
-    }
-    _firefly_cfg_auth_authentication_guard: {
-      section: 'auth',
-      key: 'AUTHENTICATION_GUARD',
-      raw: '{{ firefly_cfg_auth_authentication_guard | lower }}',
-      default: 'web',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_auth_authentication_guard_header: {
-      section: 'auth',
-      key: 'AUTHENTICATION_GUARD_HEADER',
-      raw: '{{ firefly_cfg_auth_authentication_guard_header }}',
-      default: 'REMOTE_USER',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_auth_authentication_guard_email: {
-      section: 'auth',
-      key: 'AUTHENTICATION_GUARD_EMAIL',
-      raw: '{{ firefly_cfg_auth_authentication_guard_email }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_auth_passport_private_key: {
-      section: 'auth',
-      key: 'PASSPORT_PRIVATE_KEY',
-      raw: '{{ firefly_cfg_auth_passport_private_key }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_auth_passport_public_key: {
-      section: 'auth',
-      key: 'PASSPORT_PUBLIC_KEY',
-      raw: '{{ firefly_cfg_auth_passport_public_key }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_auth_custom_logout_url: {
-      section: 'auth',
-      key: 'CUSTOM_LOGOUT_URL',
-      raw: '{{ firefly_cfg_auth_custom_logout_url }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_auth_static_cron_token: {
-      section: 'auth',
-      key: 'STATIC_CRON_TOKEN',
-      raw: '{{ firefly_cfg_auth_static_cron_token }}',
-      default: '{{
-          lookup("ansible.builtin.password",
-                 "/dev/null",
-                 chars=["ascii_lowercase", "ascii_uppercase", "digits"],
+  ansible.builtin.set_fact:  # noqa jinja[spacing] readability.
+    _firefly_cfg_app_app_env: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='APP_ENV',
+        raw=firefly_cfg_app_app_env | lower,
+        default='production',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_app_app_debug: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='APP_DEBUG',
+        raw=firefly_cfg_app_app_debug,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_app_default_language: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='DEFAULT_LANGUAGE',
+        raw=firefly_cfg_app_default_language,
+        data=firefly_cfg_app_default_language ~ '.UTF-8',
+        default='en_US',
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_app_default_locale: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='DEFAULT_LOCALE',
+        raw=firefly_cfg_app_default_locale,
+        data=firefly_cfg_app_default_locale ~ '.UTF-8',
+        default='equal',
+        hint='str',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_app_tz: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='TZ',
+        raw=firefly_cfg_app_tz,
+        default='America/Los_Angeles',
+        hint='str',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_app_cache_driver: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='CACHE_DRIVER',
+        raw=firefly_cfg_app_cache_driver | lower,
+        default='redis',
+        hint='str',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_cfg_app_session_driver: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='SESSION_DRIVER',
+        raw=firefly_cfg_app_session_driver | lower,
+        default='redis',
+        hint='str',
+        added='6.4.0',
+        order=7
+        )
+      }}"
+    _firefly_cfg_app_app_name: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='APP_NAME',
+        raw=firefly_cfg_app_app_name,
+        default='FireflyIII',
+        hint='str',
+        added='6.4.0',
+        order=8
+        )
+      }}"
+    _firefly_cfg_app_dkr_check_sqlite: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='DKR_CHECK_SQLITE',
+        raw=firefly_cfg_app_dkr_check_sqlite,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=9
+        )
+      }}"
+    _firefly_cfg_app_broadcast_driver: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='BROADCAST_DRIVER',
+        raw=firefly_cfg_app_broadcast_driver | lower,
+        default='log',
+        hint='str',
+        added='6.4.0',
+        order=10
+        )
+      }}"
+    _firefly_cfg_app_queue_driver: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='QUEUE_DRIVER',
+        raw=firefly_cfg_app_queue_driver | lower,
+        default='sync',
+        hint='str',
+        added='6.4.0',
+        order=11
+        )
+      }}"
+    _firefly_cfg_app_cache_prefix: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='CACHE_PREFIX',
+        raw=firefly_cfg_app_cache_prefix,
+        default='firefly',
+        hint='str',
+        added='6.4.0',
+        order=12
+        )
+      }}"
+    _firefly_cfg_app_demo_username: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='DEMO_USERNAME',
+        raw=firefly_cfg_app_demo_username,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=13
+        )
+      }}"
+    _firefly_cfg_app_demo_password: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='DEMO_PASSWORD',
+        raw=firefly_cfg_app_demo_password,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=14
+        )
+      }}"
+    _firefly_cfg_app_use_running_balance: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='USE_RUNNING_BALANCE',
+        raw=firefly_cfg_app_use_running_balance,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        sensitive=true,
+        order=15
+        )
+      }}"
+    _firefly_cfg_app_firefly_iii_layout: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='FIREFLY_III_LAYOUT',
+        raw=firefly_cfg_app_firefly_iii_layout,
+        default='v1',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=16
+        )
+      }}"
+    _firefly_cfg_app_query_parser_implementation: "{{ {} | r_pufky.data.v3(
+        section='app',
+        key='QUERY_PARSER_IMPLEMENTATION',
+        raw=firefly_cfg_app_query_parser_implementation | lower,
+        default='new',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=17
+        )
+      }}"
+    _firefly_cfg_auth_authentication_guard: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='AUTHENTICATION_GUARD',
+        raw=firefly_cfg_auth_authentication_guard | lower,
+        default='web',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_auth_authentication_guard_header: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='AUTHENTICATION_GUARD_HEADER',
+        raw=firefly_cfg_auth_authentication_guard_header,
+        default='REMOTE_USER',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_auth_authentication_guard_email: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='AUTHENTICATION_GUARD_EMAIL',
+        raw=firefly_cfg_auth_authentication_guard_email,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_auth_passport_private_key: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='PASSPORT_PRIVATE_KEY',
+        raw=firefly_cfg_auth_passport_private_key,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=4
+        )
+      }}"
+    _firefly_cfg_auth_passport_public_key: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='PASSPORT_PUBLIC_KEY',
+        raw=firefly_cfg_auth_passport_public_key,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=5
+        )
+      }}"
+    _firefly_cfg_auth_custom_logout_url: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='CUSTOM_LOGOUT_URL',
+        raw=firefly_cfg_auth_custom_logout_url,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_cfg_auth_static_cron_token: "{{ {} | r_pufky.data.v3(
+        section='auth',
+        key='STATIC_CRON_TOKEN',
+        raw=firefly_cfg_auth_static_cron_token,
+        default=(
+          lookup('ansible.builtin.password',
+                 '/dev/null',
+                 chars=['ascii_lowercase', 'ascii_uppercase', 'digits'],
                  length=32)
-        }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 7,
-    }
-    _firefly_cfg_cookie_path: {
-      section: 'cookie',
-      key: 'COOKIE_PATH',
-      raw: '{{ firefly_cfg_cookie_path }}',
-      default: '/',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_cookie_domain: {
-      section: 'cookie',
-      key: 'COOKIE_DOMAIN',
-      raw: '{{ firefly_cfg_cookie_domain }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_cookie_secure: {
-      section: 'cookie',
-      key: 'COOKIE_SECURE',
-      raw: '{{ firefly_cfg_cookie_secure }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_cookie_samesite: {
-      section: 'cookie',
-      key: 'COOKIE_SAMESITE',
-      raw: '{{ firefly_cfg_cookie_samesite | lower }}',
-      default: 'lax',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_currency_enable_exchange_rates: {
-      section: 'currency',
-      key: 'ENABLE_EXCHANGE_RATES',
-      raw: '{{ firefly_cfg_currency_enable_exchange_rates }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_currency_enable_external_rates: {
-      section: 'currency',
-      key: 'ENABLE_EXTERNAL_RATES',
-      raw: '{{ firefly_cfg_currency_enable_external_rates }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_db_app_key: {
-      section: 'database',
-      key: 'APP_KEY',
-      raw: '{{ firefly_cfg_db_app_key }}',
-      default: '{{
-          lookup("ansible.builtin.password",
-                 "/dev/null",
-                 chars=["ascii_lowercase", "ascii_uppercase", "digits"],
+        ),
+        hint='str',
+        added='6.4.0',
+        order=7
+        )
+      }}"
+    _firefly_cfg_cookie_path: "{{ {} | r_pufky.data.v3(
+        section='cookie',
+        key='COOKIE_PATH',
+        raw=firefly_cfg_cookie_path,
+        default='/',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_cookie_domain: "{{ {} | r_pufky.data.v3(
+        section='cookie',
+        key='COOKIE_DOMAIN',
+        raw=firefly_cfg_cookie_domain,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_cookie_secure: "{{ {} | r_pufky.data.v3(
+        section='cookie',
+        key='COOKIE_SECURE',
+        raw=firefly_cfg_cookie_secure,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_cookie_samesite: "{{ {} | r_pufky.data.v3(
+        section='cookie',
+        key='COOKIE_SAMESITE',
+        raw=firefly_cfg_cookie_samesite | lower,
+        default='lax',
+        hint='str',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_currency_enable_exchange_rates: "{{ {} | r_pufky.data.v3(
+        section='currency',
+        key='ENABLE_EXCHANGE_RATES',
+        raw=firefly_cfg_currency_enable_exchange_rates,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_currency_enable_external_rates: "{{ {} | r_pufky.data.v3(
+        section='currency',
+        key='ENABLE_EXTERNAL_RATES',
+        raw=firefly_cfg_currency_enable_external_rates,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_db_app_key: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='APP_KEY',
+        raw=firefly_cfg_db_app_key,
+        default=(
+          lookup('ansible.builtin.password',
+                 '/dev/null',
+                 chars=['ascii_lowercase', 'ascii_uppercase', 'digits'],
                  length=32)
-        }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 1,
-    }
+        ),
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=1
+        )
+      }}"
     #
-    _firefly_cfg_db_connection: {
-      section: 'database',
-      key: 'DB_CONNECTION',
-      raw: '{{ firefly_cfg_db_connection | lower }}',
-      default: 'pgsql',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_db_host: {
-      section: 'database',
-      key: 'DB_HOST',
-      raw: '{{ firefly_cfg_db_host }}',
-      default: 'localhost',
-      role_unset: '{{
+    _firefly_cfg_db_connection: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_CONNECTION',
+        raw=firefly_cfg_db_connection | lower,
+        default='pgsql',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_db_host: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_HOST',
+        raw=firefly_cfg_db_host,
+        default='localhost',
+        keep=(
+          false
+          if
+            firefly_cfg_db_connection == 'sqlite' or
+            firefly_cfg_db_socket | length > 0
+          else
           true
+        ),
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_db_port: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_PORT',
+        raw=firefly_cfg_db_port,
+        default=5432,
+        keep=(
+          false
           if
-            firefly_cfg_db_connection == "sqlite" or
+            firefly_cfg_db_connection == 'sqlite' or
             firefly_cfg_db_socket | length > 0
           else
-          false
-        }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_db_port: {
-      section: 'database',
-      key: 'DB_PORT',
-      raw: '{{ firefly_cfg_db_port }}',
-      default: 5432,
-      role_unset: '{{
-        true
-          if
-            firefly_cfg_db_connection == "sqlite" or
-            firefly_cfg_db_socket | length > 0
-          else
-          false
-        }}',
-      hint: 'int',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_db_database: {
-      section: 'database',
-      key: 'DB_DATABASE',
-      raw: '{{ firefly_cfg_db_database }}',
-      default: 'firefly',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection == "sqlite" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_db_username: {
-      section: 'database',
-      key: 'DB_USERNAME',
-      raw: '{{ firefly_cfg_db_username }}',
-      default: 'firefly',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection == "sqlite" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_db_password: {
-      section: 'database',
-      key: 'DB_PASSWORD',
-      raw: '{{ firefly_cfg_db_username }}',
-      default: '{{
-          lookup("ansible.builtin.password",
-                 "/dev/null",
-                 chars=["ascii_lowercase", "ascii_uppercase", "digits"],
+          true
+        ),
+        hint='int',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_db_database: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_DATABASE',
+        raw=firefly_cfg_db_database,
+        default='firefly',
+        keep=false if firefly_cfg_db_connection == 'sqlite' else true,
+        hint='str',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_db_username: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_USERNAME',
+        raw=firefly_cfg_db_username,
+        default='firefly',
+        keep=false if firefly_cfg_db_connection == 'sqlite' else true,
+        hint='str',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_cfg_db_password: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_PASSWORD',
+        raw=firefly_cfg_db_username,
+        default=(
+          lookup('ansible.builtin.password',
+                 '/dev/null',
+                 chars=['ascii_lowercase', 'ascii_uppercase', 'digits'],
                  length=32)
-        }}',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection == "sqlite" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 7,
-    }
-    _firefly_cfg_db_socket: {
-      section: 'database',
-      key: 'DB_SOCKET',
-      raw: '{{ firefly_cfg_db_socket }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection == "sqlite" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 8,
-    }
-    _firefly_cfg_db_mysql_use_ssl: {
-      section: 'database',
-      key: 'MYSQL_USE_SSL',
-      raw: '{{ firefly_cfg_db_mysql_use_ssl }}',
-      default: false,
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 9,
-    }
-    _firefly_cfg_db_mysql_ssl_verify_server_cert: {
-      section: 'database',
-      key: 'MYSQL_SSL_VERIFY_SERVER_CERT',
-      raw: '{{ firefly_cfg_db_mysql_ssl_verify_server_cert }}',
-      default: true,
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 10,
-    }
-    _firefly_cfg_db_mysql_ssl_capath: {
-      section: 'database',
-      key: 'MYSQL_SSL_CAPATH',
-      raw: "{{
-          firefly_cfg_db_mysql_ssl_capath | regex_replace('\\/$', '') ~ '/'
-        }}",
-      default: '/etc/ssl/certs/',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 11,
-    }
-    _firefly_cfg_db_mysql_ssl_ca: {
-      section: 'database',
-      key: 'MYSQL_SSL_CA',
-      raw: '{{ firefly_cfg_db_mysql_ssl_ca }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "ca.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 12,
-    }
-    _firefly_cfg_db_mysql_ssl_cert: {
-      section: 'database',
-      key: 'MYSQL_SSL_CERT',
-      raw: '{{ firefly_cfg_db_mysql_ssl_cert }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "cert.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 13,
-    }
-    _firefly_cfg_db_mysql_ssl_key: {
-      section: 'database',
-      key: 'MYSQL_SSL_KEY',
-      raw: '{{ firefly_cfg_db_mysql_ssl_key }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "key.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 14,
-    }
-    _firefly_cfg_db_mysql_ssl_cipher: {
-      section: 'database',
-      key: 'MYSQL_SSL_CIPHER',
-      raw: '{{ firefly_cfg_db_mysql_ssl_cipher }}',
-      data: '{{ firefly_cfg_db_mysql_ssl_cipher | join(":") }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "mysql" else false }}',
-      hint: 'list of str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 15,
-    }
-    _firefly_cfg_db_pgsql_ssl_mode: {
-      section: 'database',
-      key: 'PGSQL_SSL_MODE',
-      raw: '{{ firefly_cfg_db_pgsql_ssl_mode }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "pgsql" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 16,
-    }
-    _firefly_cfg_db_pgsql_ssl_root_cert: {
-      section: 'database',
-      key: 'PGSQL_SSL_ROOT_CERT',
-      raw: '{{ firefly_cfg_db_pgsql_ssl_root_cert }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "pgsql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "ca.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 17,
-    }
-    _firefly_cfg_db_pgsql_ssl_cert: {
-      section: 'database',
-      key: 'PGSQL_SSL_CERT',
-      raw: '{{ firefly_cfg_db_pgsql_ssl_cert }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "pgsql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "cert.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 18,
-    }
-    _firefly_cfg_db_pgsql_ssl_key: {
-      section: 'database',
-      key: 'PGSQL_SSL_KEY',
-      raw: '{{ firefly_cfg_db_pgsql_ssl_key }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "pgsql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "key.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 19,
-    }
-    _firefly_cfg_db_pgsql_ssl_crl_file: {
-      section: 'database',
-      key: 'PGSQL_SSL_CRL_FILE',
-      raw: '{{ firefly_cfg_db_pgsql_ssl_crl_file }}',
-      default: '',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "pgsql" else false }}',
-      role_dest: '{{ _firefly_srv_storage_dir.data ~ "crl.pem" }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 20,
-    }
-    _firefly_cfg_db_pgsql_schema: {
-      section: 'database',
-      key: 'PGSQL_SCHEMA',
-      raw: '{{ firefly_cfg_db_pgsql_schema }}',
-      default: 'public',
-      role_unset:
-        '{{ true if firefly_cfg_db_connection != "pgsql" else false }}',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 21,
-    }
-    _firefly_cfg_geo_enable_external_map: {
-      section: 'geo',
-      key: 'ENABLE_EXTERNAL_MAP',
-      raw: '{{ firefly_cfg_geo_enable_external_map }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_geo_default_lat: {
-      section: 'geo',
-      key: 'MAP_DEFAULT_LAT',
-      raw: '{{ firefly_cfg_geo_default_lat }}',
-      default: 51.983333,
-      hint: 'float',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_geo_default_long: {
-      section: 'geo',
-      key: 'MAP_DEFAULT_LONG',
-      raw: '{{ firefly_cfg_geo_default_long }}',
-      default: 5.916667,
-      hint: 'float',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_geo_default_zoom: {
-      section: 'geo',
-      key: 'MAP_DEFAULT_ZOOM',
-      raw: '{{ firefly_cfg_geo_default_zoom }}',
-      default: 6,
-      hint: 'int',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_geo_ipinfo_token: {
-      section: 'geo',
-      key: 'IPINFO_TOKEN',
-      raw: '{{ firefly_cfg_geo_ipinfo_token }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_log_log_channel: {
-      section: 'log',
-      key: 'LOG_CHANNEL',
-      raw: '{{ firefly_cfg_log_log_channel | lower }}',
-      default: 'stack',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_log_app_log_level: {
-      section: 'log',
-      key: 'APP_LOG_LEVEL',
-      raw: '{{ firefly_cfg_log_app_log_level | lower }}',
-      default: 'notice',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_log_audit_log_level: {
-      section: 'log',
-      key: 'AUDIT_LOG_LEVEL',
-      raw: '{{ firefly_cfg_log_audit_log_level | lower }}',
-      default: 'emergency',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_log_audit_log_channel: {
-      section: 'log',
-      key: 'AUDIT_LOG_CHANNEL',
-      raw: '{{ firefly_cfg_log_audit_log_channel | lower }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_log_papertrail_host: {
-      section: 'log',
-      key: 'PAPERTRAIL_HOST',
-      raw: '{{ firefly_cfg_log_papertrail_host | lower }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_log_papertrail_port: {
-      section: 'log',
-      key: 'PAPERTRAIL_PORT',
-      raw: '{{ firefly_cfg_log_papertrail_port }}',
-      default: 514,
-      hint: 'int',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_mail_site_owner: {
-      section: 'mail',
-      key: 'SITE_OWNER',
-      raw: '{{ firefly_cfg_mail_site_owner }}',
-      default: 'mail@example.com',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_mail_mailer: {
-      section: 'mail',
-      key: 'MAIL_MAILER',
-      raw: '{{ firefly_cfg_mail_mailer | lower }}',
-      default: 'log',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_mail_host: {
-      section: 'mail',
-      key: 'MAIL_HOST',
-      raw: '{{ firefly_cfg_mail_host }}',
-      default: 'null',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_mail_port: {
-      section: 'mail',
-      key: 'MAIL_PORT',
-      raw: '{{ firefly_cfg_mail_port }}',
-      default: 2525,
-      hint: 'int',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_mail_from: {
-      section: 'mail',
-      key: 'MAIL_FROM',
-      raw: '{{ firefly_cfg_mail_from }}',
-      default: 'firefly@example.com',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_mail_username: {
-      section: 'mail',
-      key: 'MAIL_USERNAME',
-      raw: '{{ firefly_cfg_mail_username }}',
-      default: 'null',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_mail_password: {
-      section: 'mail',
-      key: 'MAIL_PASSWORD',
-      raw: '{{ firefly_cfg_mail_password }}',
-      default: 'null',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 7,
-    }
-    _firefly_cfg_mail_encryption: {
-      section: 'mail',
-      key: 'MAIL_ENCRYPTION',
-      raw: '{{ firefly_cfg_mail_encryption | lower }}',
-      default: 'null',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 8,
-    }
-    _firefly_cfg_mail_sendmail_command: {
-      section: 'mail',
-      key: 'MAIL_SENDMAIL_COMMAND',
-      raw: '{{ firefly_cfg_mail_sendmail_command }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 9,
-    }
-    _firefly_cfg_mail_allow_self_signed: {
-      section: 'mail',
-      key: 'MAIL_ALLOW_SELF_SIGNED',
-      raw: '{{ firefly_cfg_mail_allow_self_signed }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 10,
-    }
-    _firefly_cfg_mail_verify_peer: {
-      section: 'mail',
-      key: 'MAIL_VERIFY_PEER',
-      raw: '{{ firefly_cfg_mail_verify_peer }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 11,
-    }
-    _firefly_cfg_mail_verify_peer_name: {
-      section: 'mail',
-      key: 'MAIL_VERIFY_PEER_NAME',
-      raw: '{{ firefly_cfg_mail_verify_peer_name }}',
-      default: true,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 12,
-    }
-    _firefly_cfg_mail_send_error_message: {
-      section: 'mail',
-      key: 'SEND_ERROR_MESSAGE',
-      raw: '{{ firefly_cfg_mail_send_error_message }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 13,
-    }
-    _firefly_cfg_mail_send_report_journals: {
-      section: 'mail',
-      key: 'SEND_REPORT_JOURNALS',
-      raw: '{{ firefly_cfg_mail_send_report_journals }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 14,
-    }
-    _firefly_cfg_mail_mailgun_domain: {
-      section: 'mail',
-      key: 'MAILGUN_DOMAIN',
-      raw: '{{ firefly_cfg_mail_mailgun_domain }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 15,
-    }
-    _firefly_cfg_mail_mailgun_secret: {
-      section: 'mail',
-      key: 'MAILGUN_SECRET',
-      raw: '{{ firefly_cfg_mail_mailgun_secret }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 16,
-    }
-    _firefly_cfg_mail_mailgun_endpoint: {
-      section: 'mail',
-      key: 'MAILGUN_ENDPOINT',
-      raw: '{{ firefly_cfg_mail_mailgun_endpoint }}',
-      default: 'api.mailgun.net',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 17,
-    }
-    _firefly_cfg_mail_mandrill_secret: {
-      section: 'mail',
-      key: 'MANDRILL_SECRET',
-      raw: '{{ firefly_cfg_mail_mandrill_secret }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 18,
-    }
-    _firefly_cfg_mail_sparkpost_secret: {
-      section: 'mail',
-      key: 'SPARKPOST_SECRET',
-      raw: '{{ firefly_cfg_mail_sparkpost_secret }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 19,
-    }
-    _firefly_cfg_mail_mailersend_api_key: {
-      section: 'mail',
-      key: 'MAILERSEND_API_KEY',
-      raw: '{{ firefly_cfg_mail_mailersend_api_key }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 20,
-    }
-    _firefly_cfg_network_trusted_proxies: {
-      section: 'network',
-      key: 'TRUSTED_PROXIES',
-      raw: '{{ firefly_cfg_network_trusted_proxies }}',
-      data: '{{ firefly_cfg_network_trusted_proxies | join(",") }}',
-      default: [],
-      hint: 'list of str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_network_app_url: {
-      section: 'network',
-      key: 'APP_URL',
-      raw: '{{ firefly_cfg_network_app_url }}',
-      default: 'http://localhost',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_network_valid_url_protocols: {
-      section: 'network',
-      key: 'VALID_URL_PROTOCOLS',
-      raw: '{{ firefly_cfg_network_valid_url_protocols }}',
-      data: '{{ firefly_cfg_network_valid_url_protocols | join(",") }}',
-      default: [],
-      hint: 'list of str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_network_disable_frame_header: {
-      section: 'network',
-      key: 'DISABLE_FRAME_HEADER',
-      raw: '{{ firefly_cfg_network_disable_frame_header }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_network_disable_csp_header: {
-      section: 'network',
-      key: 'DISABLE_CSP_HEADER',
-      raw: '{{ firefly_cfg_network_disable_csp_header }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_network_allow_webhooks: {
-      section: 'network',
-      key: 'ALLOW_WEBHOOKS',
-      raw: '{{ firefly_cfg_network_allow_webhooks }}',
-      default: false,
-      hint: 'bool',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_pusher_id: {
-      section: 'pusher',
-      key: 'PUSHER_ID',
-      raw: '{{ firefly_cfg_pusher_id }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_pusher_key: {
-      section: 'pusher',
-      key: 'PUSHER_KEY',
-      raw: '{{ firefly_cfg_pusher_key }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_pusher_token: {
-      section: 'pusher',
-      key: 'PUSHER_TOKEN',
-      raw: '{{ firefly_cfg_pusher_token }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_pusher_secret: {
-      section: 'pusher',
-      key: 'PUSHER_SECRET',
-      raw: '{{ firefly_cfg_pusher_secret }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_redis_scheme: {
-      section: 'redis',
-      key: 'REDIS_SCHEME',
-      raw: '{{ firefly_cfg_redis_scheme | lower }}',
-      default: 'tcp',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_redis_path: {
-      section: 'redis',
-      key: 'REDIS_PATH',
-      raw: '{{ firefly_cfg_redis_path }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
-    _firefly_cfg_redis_host: {
-      section: 'redis',
-      key: 'REDIS_HOST',
-      raw: '{{ firefly_cfg_redis_host }}',
-      default: '127.0.0.1',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 3,
-    }
-    _firefly_cfg_redis_port: {
-      section: 'redis',
-      key: 'REDIS_PORT',
-      raw: '{{ firefly_cfg_redis_port }}',
-      default: '6379',
-      hint: 'int',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 4,
-    }
-    _firefly_cfg_redis_username: {
-      section: 'redis',
-      key: 'REDIS_USERNAME',
-      raw: '{{ firefly_cfg_redis_username }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 5,
-    }
-    _firefly_cfg_redis_password: {
-      section: 'redis',
-      key: 'REDIS_PASSWORD',
-      raw: '{{ firefly_cfg_redis_password }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: true,
-      deprecated: false,
-      order: 6,
-    }
-    _firefly_cfg_redis_db: {
-      section: 'redis',
-      key: 'REDIS_DB',
-      raw: '{{ firefly_cfg_redis_db }}',
-      data: '{{ firefly_cfg_redis_db }}',
-      default: '"0"',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 7,
-    }
-    _firefly_cfg_redis_cache_db: {
-      section: 'redis',
-      key: 'REDIS_CACHE_DB',
-      raw: '{{ firefly_cfg_redis_cache_db }}',
-      data: '{{ firefly_cfg_redis_cache_db }}',
-      default: '"1"',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 8,
-    }
-    _firefly_cfg_tracker_site_id: {
-      section: 'tracker',
-      key: 'TRACKER_SITE_ID',
-      raw: '{{ firefly_cfg_tracker_site_id }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 1,
-    }
-    _firefly_cfg_tracker_url: {
-      section: 'tracker',
-      key: 'TRACKER_URL',
-      raw: '{{ firefly_cfg_tracker_url }}',
-      default: '',
-      hint: 'str',
-      added: '6.4.0',
-      sensitive: false,
-      deprecated: false,
-      order: 2,
-    }
+        ),
+        keep=false if firefly_cfg_db_connection == 'sqlite' else true,
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=7
+        )
+      }}"
+    _firefly_cfg_db_socket: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='DB_SOCKET',
+        raw=firefly_cfg_db_socket,
+        default='',
+        keep=false if firefly_cfg_db_connection == 'sqlite' else true,
+        hint='str',
+        added='6.4.0',
+        order=8
+        )
+      }}"
+    _firefly_cfg_db_mysql_use_ssl: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_USE_SSL',
+        raw=firefly_cfg_db_mysql_use_ssl,
+        default=false,
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        hint='bool',
+        added='6.4.0',
+        order=9
+        )
+      }}"
+    _firefly_cfg_db_mysql_ssl_verify_server_cert: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_SSL_VERIFY_SERVER_CERT',
+        raw=firefly_cfg_db_mysql_ssl_verify_server_cert,
+        default=true,
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        hint='bool',
+        added='6.4.0',
+        order=10
+        )
+      }}"
+    _firefly_cfg_db_mysql_ssl_capath: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_SSL_CAPATH',
+        raw=firefly_cfg_db_mysql_ssl_capath | regex_replace('\\/$', '') ~ '/',
+        default='/etc/ssl/certs/',
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        hint='str',
+        added='6.4.0',
+        order=11
+        )
+      }}"
+    _firefly_cfg_db_mysql_ssl_ca: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_SSL_CA',
+        raw=firefly_cfg_db_mysql_ssl_ca,
+        default='',
+        _dest=_firefly_srv_storage_dir.data ~ 'ca.pem',
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        hint='str',
+        added='6.4.0',
+        order=12
+        )
+      }}"
+    _firefly_cfg_db_mysql_ssl_cert: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_SSL_CERT',
+        raw=firefly_cfg_db_mysql_ssl_cert,
+        default='',
+        _dest=_firefly_srv_storage_dir.data ~ 'cert.pem',
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        hint='str',
+        added='6.4.0',
+        order=13
+        )
+      }}"
+    _firefly_cfg_db_mysql_ssl_key: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_SSL_KEY',
+        raw=firefly_cfg_db_mysql_ssl_key,
+        default='',
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        _dest=_firefly_srv_storage_dir.data ~ 'key.pem',
+        hint='str',
+        added='6.4.0',
+        order=14
+        )
+      }}"
+    _firefly_cfg_db_mysql_ssl_cipher: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='MYSQL_SSL_CIPHER',
+        raw=firefly_cfg_db_mysql_ssl_cipher,
+        data=firefly_cfg_db_mysql_ssl_cipher | join(':'),
+        default='',
+        keep=false if firefly_cfg_db_connection != 'mysql' else true,
+        hint='list of str',
+        added='6.4.0',
+        order=15
+        )
+      }}"
+    _firefly_cfg_db_pgsql_ssl_mode: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='PGSQL_SSL_MODE',
+        raw=firefly_cfg_db_pgsql_ssl_mode,
+        default='',
+        keep=false if firefly_cfg_db_connection != 'pgsql' else true,
+        hint='str',
+        added='6.4.0',
+        order=16
+        )
+      }}"
+    _firefly_cfg_db_pgsql_ssl_root_cert: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='PGSQL_SSL_ROOT_CERT',
+        raw=firefly_cfg_db_pgsql_ssl_root_cert,
+        default='',
+        _dest=_firefly_srv_storage_dir.data ~ 'ca.pem',
+        keep=false if firefly_cfg_db_connection != 'pgsql' else true,
+        hint='str',
+        added='6.4.0',
+        order=17
+        )
+      }}"
+    _firefly_cfg_db_pgsql_ssl_cert: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='PGSQL_SSL_CERT',
+        raw=firefly_cfg_db_pgsql_ssl_cert,
+        default='',
+        _dest=_firefly_srv_storage_dir.data ~ 'cert.pem',
+        keep=false if firefly_cfg_db_connection != 'pgsql' else true,
+        hint='str',
+        added='6.4.0',
+        order=18
+        )
+      }}"
+    _firefly_cfg_db_pgsql_ssl_key: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='PGSQL_SSL_KEY',
+        raw=firefly_cfg_db_pgsql_ssl_key,
+        default='',
+        _dest=_firefly_srv_storage_dir.data ~ 'key.pem',
+        keep=false if firefly_cfg_db_connection != 'pgsql' else true,
+        hint='str',
+        added='6.4.0',
+        order=19
+        )
+      }}"
+    _firefly_cfg_db_pgsql_ssl_crl_file: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='PGSQL_SSL_CRL_FILE',
+        raw=firefly_cfg_db_pgsql_ssl_crl_file,
+        default='',
+        _dest=_firefly_srv_storage_dir.data ~ 'crl.pem',
+        keep=false if firefly_cfg_db_connection != 'pgsql' else true,
+        hint='str',
+        added='6.4.0',
+        order=20
+        )
+      }}"
+    _firefly_cfg_db_pgsql_schema: "{{ {} | r_pufky.data.v3(
+        section='database',
+        key='PGSQL_SCHEMA',
+        raw=firefly_cfg_db_pgsql_schema,
+        default='public',
+        keep=false if firefly_cfg_db_connection != 'pgsql' else true,
+        hint='str',
+        added='6.4.0',
+        order=21
+        )
+      }}"
+    _firefly_cfg_geo_enable_external_map: "{{ {} | r_pufky.data.v3(
+        section='geo',
+        key='ENABLE_EXTERNAL_MAP',
+        raw=firefly_cfg_geo_enable_external_map,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_geo_default_lat: "{{ {} | r_pufky.data.v3(
+        section='geo',
+        key='MAP_DEFAULT_LAT',
+        raw=firefly_cfg_geo_default_lat,
+        default=51.983333,
+        hint='float',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_geo_default_long: "{{ {} | r_pufky.data.v3(
+        section='geo',
+        key='MAP_DEFAULT_LONG',
+        raw=firefly_cfg_geo_default_long,
+        default=5.916667,
+        hint='float',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_geo_default_zoom: "{{ {} | r_pufky.data.v3(
+        section='geo',
+        key='MAP_DEFAULT_ZOOM',
+        raw=firefly_cfg_geo_default_zoom,
+        default=6,
+        hint='int',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_geo_ipinfo_token: "{{ {} | r_pufky.data.v3(
+        section='geo',
+        key='IPINFO_TOKEN',
+        raw=firefly_cfg_geo_ipinfo_token,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_log_log_channel: "{{ {} | r_pufky.data.v3(
+        section='log',
+        key='LOG_CHANNEL',
+        raw=firefly_cfg_log_log_channel | lower,
+        default='stack',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_log_app_log_level: "{{ {} | r_pufky.data.v3(
+        section='log',
+        key='APP_LOG_LEVEL',
+        raw=firefly_cfg_log_app_log_level | lower,
+        default='notice',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_log_audit_log_level: "{{ {} | r_pufky.data.v3(
+        section='log',
+        key='AUDIT_LOG_LEVEL',
+        raw=firefly_cfg_log_audit_log_level | lower,
+        default='emergency',
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_log_audit_log_channel: "{{ {} | r_pufky.data.v3(
+        section='log',
+        key='AUDIT_LOG_CHANNEL',
+        raw=firefly_cfg_log_audit_log_channel | lower,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_log_papertrail_host: "{{ {} | r_pufky.data.v3(
+        section='log',
+        key='PAPERTRAIL_HOST',
+        raw=firefly_cfg_log_papertrail_host | lower,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_log_papertrail_port: "{{ {} | r_pufky.data.v3(
+        section='log',
+        key='PAPERTRAIL_PORT',
+        raw=firefly_cfg_log_papertrail_port,
+        default=514,
+        hint='int',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_cfg_mail_site_owner: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='SITE_OWNER',
+        raw=firefly_cfg_mail_site_owner,
+        default='mail@example.com',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_mail_mailer: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_MAILER',
+        raw=firefly_cfg_mail_mailer | lower,
+        default='log',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_mail_host: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_HOST',
+        raw=firefly_cfg_mail_host,
+        default='null',
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_mail_port: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_PORT',
+        raw=firefly_cfg_mail_port,
+        default=2525,
+        hint='int',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_mail_from: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_FROM',
+        raw=firefly_cfg_mail_from,
+        default='firefly@example.com',
+        hint='str',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_mail_username: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_USERNAME',
+        raw=firefly_cfg_mail_username,
+        default='null',
+        hint='str',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_cfg_mail_password: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_PASSWORD',
+        raw=firefly_cfg_mail_password,
+        default='null',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=7
+        )
+      }}"
+    _firefly_cfg_mail_encryption: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_ENCRYPTION',
+        raw=firefly_cfg_mail_encryption | lower,
+        default='null',
+        hint='str',
+        added='6.4.0',
+        order=8
+        )
+      }}"
+    _firefly_cfg_mail_sendmail_command: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_SENDMAIL_COMMAND',
+        raw=firefly_cfg_mail_sendmail_command,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=9
+        )
+      }}"
+    _firefly_cfg_mail_allow_self_signed: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_ALLOW_SELF_SIGNED',
+        raw=firefly_cfg_mail_allow_self_signed,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=10
+        )
+      }}"
+    _firefly_cfg_mail_verify_peer: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_VERIFY_PEER',
+        raw=firefly_cfg_mail_verify_peer,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=11
+        )
+      }}"
+    _firefly_cfg_mail_verify_peer_name: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAIL_VERIFY_PEER_NAME',
+        raw=firefly_cfg_mail_verify_peer_name,
+        default=true,
+        hint='bool',
+        added='6.4.0',
+        order=12
+        )
+      }}"
+    _firefly_cfg_mail_send_error_message: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='SEND_ERROR_MESSAGE',
+        raw=firefly_cfg_mail_send_error_message,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=13
+        )
+      }}"
+    _firefly_cfg_mail_send_report_journals: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='SEND_REPORT_JOURNALS',
+        raw=firefly_cfg_mail_send_report_journals,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=14
+        )
+      }}"
+    _firefly_cfg_mail_mailgun_domain: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAILGUN_DOMAIN',
+        raw=firefly_cfg_mail_mailgun_domain,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=15
+        )
+      }}"
+    _firefly_cfg_mail_mailgun_secret: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAILGUN_SECRET',
+        raw=firefly_cfg_mail_mailgun_secret,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=16
+        )
+      }}"
+    _firefly_cfg_mail_mailgun_endpoint: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAILGUN_ENDPOINT',
+        raw=firefly_cfg_mail_mailgun_endpoint,
+        default='api.mailgun.net',
+        hint='str',
+        added='6.4.0',
+        order=17
+        )
+      }}"
+    _firefly_cfg_mail_mandrill_secret: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MANDRILL_SECRET',
+        raw=firefly_cfg_mail_mandrill_secret,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=18
+        )
+      }}"
+    _firefly_cfg_mail_sparkpost_secret: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='SPARKPOST_SECRET',
+        raw=firefly_cfg_mail_sparkpost_secret,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=19
+        )
+      }}"
+    _firefly_cfg_mail_mailersend_api_key: "{{ {} | r_pufky.data.v3(
+        section='mail',
+        key='MAILERSEND_API_KEY',
+        raw=firefly_cfg_mail_mailersend_api_key,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=20
+        )
+      }}"
+    _firefly_cfg_network_trusted_proxies: "{{ {} | r_pufky.data.v3(
+        section='network',
+        key='TRUSTED_PROXIES',
+        raw=firefly_cfg_network_trusted_proxies,
+        data=firefly_cfg_network_trusted_proxies | join(','),
+        default=[],
+        hint='list of str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_network_app_url: "{{ {} | r_pufky.data.v3(
+        section='network',
+        key='APP_URL',
+        raw=firefly_cfg_network_app_url,
+        default='http://localhost',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=2
+        )
+      }}"
+    _firefly_cfg_network_valid_url_protocols: "{{ {} | r_pufky.data.v3(
+        section='network',
+        key='VALID_URL_PROTOCOLS',
+        raw=firefly_cfg_network_valid_url_protocols,
+        data=firefly_cfg_network_valid_url_protocols | join(','),
+        default=[],
+        hint='list of str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_network_disable_frame_header: "{{ {} | r_pufky.data.v3(
+        section='network',
+        key='DISABLE_FRAME_HEADER',
+        raw=firefly_cfg_network_disable_frame_header,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_network_disable_csp_header: "{{ {} | r_pufky.data.v3(
+        section='network',
+        key='DISABLE_CSP_HEADER',
+        raw=firefly_cfg_network_disable_csp_header,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_network_allow_webhooks: "{{ {} | r_pufky.data.v3(
+        section='network',
+        key='ALLOW_WEBHOOKS',
+        raw=firefly_cfg_network_allow_webhooks,
+        default=false,
+        hint='bool',
+        added='6.4.0',
+        order=6
+        )
+      }}"
+    _firefly_cfg_pusher_id: "{{ {} | r_pufky.data.v3(
+        section='pusher',
+        key='PUSHER_ID',
+        raw=firefly_cfg_pusher_id,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_pusher_key: "{{ {} | r_pufky.data.v3(
+        section='pusher',
+        key='PUSHER_KEY',
+        raw=firefly_cfg_pusher_key,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=2
+        )
+      }}"
+    _firefly_cfg_pusher_token: "{{ {} | r_pufky.data.v3(
+        section='pusher',
+        key='PUSHER_TOKEN',
+        raw=firefly_cfg_pusher_token,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=3
+        )
+      }}"
+    _firefly_cfg_pusher_secret: "{{ {} | r_pufky.data.v3(
+        section='pusher',
+        key='PUSHER_SECRET',
+        raw=firefly_cfg_pusher_secret,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=4
+        )
+      }}"
+    _firefly_cfg_redis_scheme: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_SCHEME',
+        raw=firefly_cfg_redis_scheme | lower,
+        default='tcp',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_redis_path: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_PATH',
+        raw=firefly_cfg_redis_path,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
+    _firefly_cfg_redis_host: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_HOST',
+        raw=firefly_cfg_redis_host,
+        default='127.0.0.1',
+        hint='str',
+        added='6.4.0',
+        order=3
+        )
+      }}"
+    _firefly_cfg_redis_port: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_PORT',
+        raw=firefly_cfg_redis_port,
+        default='6379',
+        hint='int',
+        added='6.4.0',
+        order=4
+        )
+      }}"
+    _firefly_cfg_redis_username: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_USERNAME',
+        raw=firefly_cfg_redis_username,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=5
+        )
+      }}"
+    _firefly_cfg_redis_password: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_PASSWORD',
+        raw=firefly_cfg_redis_password,
+        default='',
+        hint='str',
+        added='6.4.0',
+        sensitive=true,
+        order=6
+        )
+      }}"
+    _firefly_cfg_redis_db: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_DB',
+        raw=firefly_cfg_redis_db,
+        data=firefly_cfg_redis_db,
+        default='0',
+        hint='str',
+        added='6.4.0',
+        comment='Explicitly requires a string integer.',
+        order=7
+        )
+      }}"
+    _firefly_cfg_redis_cache_db: "{{ {} | r_pufky.data.v3(
+        section='redis',
+        key='REDIS_CACHE_DB',
+        raw=firefly_cfg_redis_cache_db,
+        data=firefly_cfg_redis_cache_db,
+        default='1',
+        hint='str',
+        added='6.4.0',
+        comment='Explicitly requires a string integer.',
+        order=8
+        )
+      }}"
+    _firefly_cfg_tracker_site_id: "{{ {} | r_pufky.data.v3(
+        section='tracker',
+        key='TRACKER_SITE_ID',
+        raw=firefly_cfg_tracker_site_id,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=1
+        )
+      }}"
+    _firefly_cfg_tracker_url: "{{ {} | r_pufky.data.v3(
+        section='tracker',
+        key='TRACKER_URL',
+        raw=firefly_cfg_tracker_url,
+        default='',
+        hint='str',
+        added='6.4.0',
+        order=2
+        )
+      }}"
 
 - name: 'Annotate | generate config map'
   ansible.builtin.set_fact:

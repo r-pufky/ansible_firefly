@@ -72,8 +72,8 @@
   ansible.builtin.template:
     src: 'firefly.env.j2'
     dest: '{{ firefly_role_repo_extract_symlink }}/.env'
-    owner: '{{ _firefly_srv_user.role_uid }}'
-    group: '{{ _firefly_srv_group.role_gid }}'
+    owner: '{{ _firefly_srv_user._uid }}'
+    group: '{{ _firefly_srv_group._gid }}'
     mode: '0640'
 
 - name: 'Config | set logrotate'
@@ -141,8 +141,8 @@
     - name: 'Config | enable backups | set backup directory'
       ansible.builtin.file:
         dest: '{{ _firefly_srv_backup_dir.raw }}'
-        owner: '{{ _firefly_srv_user.role_uid }}'
-        group: '{{ _firefly_srv_group.role_gid }}'
+        owner: '{{ _firefly_srv_user._uid }}'
+        group: '{{ _firefly_srv_group._gid }}'
         mode: '0750'
         state: 'directory'
       become: true
@@ -155,9 +155,9 @@
     - name: 'Config | enable backups | set backup script'
       ansible.builtin.template:
         src: 'firefly_backup.j2'
-        dest: '{{ _firefly_srv_backup_enable.role_backup_script }}'
-        owner: '{{ _firefly_srv_user.role_uid }}'
-        group: '{{ _firefly_srv_group.role_gid }}'
+        dest: '{{ _firefly_srv_backup_enable._backup_script }}'
+        owner: '{{ _firefly_srv_user._uid }}'
+        group: '{{ _firefly_srv_group._gid }}'
         mode: '0750'
       become: true
       become_user: '{{
@@ -180,7 +180,7 @@
             service:
               type: 'oneshot'
               exec_start:
-                - '{{ _firefly_srv_backup_enable.role_backup_script }}'
+                - '{{ _firefly_srv_backup_enable._backup_script }}'
             exec:
               user: 'root'
               group: 'root'
@@ -202,7 +202,7 @@
   block:
     - name: 'Config | disable backups | remove backup script'
       ansible.builtin.file:
-        dest: '{{ _firefly_srv_backup_enable.role_backup_script }}'
+        dest: '{{ _firefly_srv_backup_enable._backup_script }}'
         state: 'absent'
 
     - name: 'Config | disable backups | remove backup service'
