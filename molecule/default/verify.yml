@@ -10,7 +10,7 @@
       vars:
         test_name: 'Verify | environment'
         test_src: 'files/env'
-        test_file: '/opt/firefly/firefly-iii-v6.4.0/.env'
+        test_file: '/opt/firefly/firefly-iii-v6.4.2/.env'
         test_owner: 'www-data'
         test_group: 'www-data'
         test_mode: '0640'
@@ -31,7 +31,7 @@
 
     - name: 'Verify | query storage link'
       ansible.builtin.stat:
-        path: '/opt/firefly/firefly-iii-v6.4.0/storage'
+        path: '/opt/firefly/firefly-iii-v6.4.2/storage'
       register: _firefly_test
 
     - name: 'Verify | assert storage link'
