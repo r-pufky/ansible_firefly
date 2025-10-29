@@ -85,7 +85,7 @@ firefly_srv_memcached_enable: false
 #
 #   ansible-playbook site.yml
 #       --tags Firefly
-#       -e 'firefly_srv_initialize_database_enable=true'
+#       -e '{"firefly_srv_initialize_database_enable": true}'
 #
 # Default: False.
 firefly_srv_initialize_database_enable: false
@@ -105,7 +105,7 @@ firefly_srv_delete_old_versions_enable: true
 #
 #   ansible-playbook site.yml
 #       --tags Firefly
-#       -e 'firefly_srv_force_config_only_enable=true'
+#       -e '{"firefly_srv_force_config_only_enable": true}'
 #
 # Default: False.
 firefly_srv_force_config_only_enable: false
