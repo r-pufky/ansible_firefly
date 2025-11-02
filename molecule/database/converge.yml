@@ -3,9 +3,9 @@
   hosts: 'firefly-debian-13-database_postgres'
   gather_facts: false
   tasks:
-    - name: 'Converge | apply r_pufky.srv.firefly'
+    - name: 'Converge | apply r_pufky.media.firefly'
       ansible.builtin.include_role:
-        name: 'r_pufky.srv.firefly'
+        name: 'r_pufky.media.firefly'
       vars:
         firefly_cfg_db_connection: 'pgsql'
 
@@ -13,8 +13,8 @@
   hosts: 'firefly-debian-13-database_mysql'
   gather_facts: false
   tasks:
-    - name: 'Converge | apply r_pufky.srv.firefly'
+    - name: 'Converge | apply r_pufky.media.firefly'
       ansible.builtin.include_role:
-        name: 'r_pufky.srv.firefly'
+        name: 'r_pufky.media.firefly'
       vars:
         firefly_cfg_db_connection: 'mysql'

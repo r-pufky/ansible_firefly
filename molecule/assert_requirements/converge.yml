@@ -10,7 +10,7 @@
       vars:
         test_name:
           'Converge | assert backup and storage locations are different'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message:
           'Same directories should trigger failure.'
         firefly_srv_backup_dir: '/data/firefly'
@@ -23,7 +23,7 @@
       vars:
         test_name: >
           Converge | assert memcached session driver same as cache driver
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message:
           'Mis-matched cache, session drivers did not trigger assertion.'
         firefly_cfg_app_session_driver: 'memcached'
@@ -36,7 +36,7 @@
       vars:
         test_name:
           Converge | assert redis session driver same as cache driver
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message:
           'Mis-match cache, session drivers  did not trigger assertion.'
         firefly_cfg_app_session_driver: 'redis'
@@ -48,7 +48,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert third party authenticator missing header'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty header did not trigger assertion.'
         firefly_cfg_auth_authentication_guard: 'remote_user_guard'
         firefly_cfg_auth_authentication_guard_header: ''
@@ -60,7 +60,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert third party authenticator missing email'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty email did not trigger assertion.'
         firefly_cfg_auth_authentication_guard: 'remote_user_guard'
         firefly_cfg_auth_authentication_guard_header: 'X-AUTH-TEST'
@@ -72,7 +72,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database encryption key short'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Short test key did not trigger assertion.'
         firefly_cfg_db_app_key: 'testkey'
 
@@ -82,7 +82,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database encryption key long'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Long test key did not trigger assertion.'
         firefly_cfg_db_app_key: 'thistestkeyisover32characterslong'
 
@@ -92,7 +92,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert sqlite cannot use socket connections'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Sqlite with socket did not trigger assertion.'
         firefly_cfg_db_connection: 'sqlite'
         firefly_cfg_db_socket: '/var/run/postgresql/.s.PGSQL.5432'
@@ -103,7 +103,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database host requirements'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty host did not trigger assertion.'
         firefly_cfg_db_connection: '{{ item }}'
         firefly_cfg_db_host: ''
@@ -118,7 +118,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database port requirements'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty port did not trigger assertion.'
         firefly_cfg_db_connection: '{{ item }}'
         firefly_cfg_db_host: 'localhost'
@@ -133,7 +133,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database connection database'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty database did not trigger assertion.'
         firefly_cfg_db_connection: '{{ item }}'
         firefly_cfg_db_host: 'localhost'
@@ -151,7 +151,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database connection username'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty username did not trigger assertion.'
         firefly_cfg_db_connection: '{{ item }}'
         firefly_cfg_db_host: 'localhost'
@@ -169,7 +169,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert database connection password'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty password did not trigger assertion.'
         firefly_cfg_db_connection: '{{ item }}'
         firefly_cfg_db_host: 'localhost'
@@ -187,7 +187,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mysql SSL CA'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'mysql'
         firefly_cfg_db_host: 'localhost'
@@ -205,7 +205,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mysql SSL cert'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'mysql'
         firefly_cfg_db_host: 'localhost'
@@ -223,7 +223,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mysql SSL key'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'mysql'
         firefly_cfg_db_host: 'localhost'
@@ -241,7 +241,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert postgres SSL root cert'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'pgsql'
         firefly_cfg_db_host: 'localhost'
@@ -260,7 +260,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert postgres SSL cert'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'pgsql'
         firefly_cfg_db_host: 'localhost'
@@ -279,7 +279,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert postgres SSL key'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'pgsql'
         firefly_cfg_db_host: 'localhost'
@@ -298,7 +298,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert postgres SSL CRL cert'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Directory did not trigger assertion.'
         firefly_cfg_db_connection: 'pgsql'
         firefly_cfg_db_host: 'localhost'
@@ -317,7 +317,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert papertrail logs host'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty host should trigger assertion failure.'
         firefly_cfg_log_log_channel: 'papertrail'
         firefly_cfg_log_papertrail_host: ''
@@ -329,7 +329,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert papertrail logs port'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty port should trigger assertion failure.'
         firefly_cfg_log_log_channel: 'papertrail'
         firefly_cfg_log_papertrail_host: 'localhost'
@@ -341,7 +341,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert papertrail audit logs host'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty host should trigger assertion failure.'
         firefly_cfg_log_audit_log_channel: 'papertrail'
         firefly_cfg_log_papertrail_host: ''
@@ -353,7 +353,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert papertrail audit logs port'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty port should trigger assertion failure.'
         firefly_cfg_log_audit_log_channel: 'papertrail'
         firefly_cfg_log_papertrail_host: 'localhost'
@@ -365,7 +365,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mail mailgun domain'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty domain should trigger assertion failure.'
         firefly_cfg_mail_mailer: 'mailgun'
         firefly_cfg_mail_mailgun_domain: ''
@@ -378,7 +378,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mail mailgun secret'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty secret should trigger assertion failure.'
         firefly_cfg_mail_mailer: 'mailgun'
         firefly_cfg_mail_mailgun_domain: 'example.com'
@@ -391,7 +391,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mail mailgun endpoint'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty endpoint should trigger assertion failure.'
         firefly_cfg_mail_mailer: 'mailgun'
         firefly_cfg_mail_mailgun_domain: 'example.com'
@@ -404,7 +404,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mail mandrill secret'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty secret should trigger assertion failure.'
         firefly_cfg_mail_mailer: 'mandrill'
         firefly_cfg_mail_mandrill_secret: ''
@@ -415,7 +415,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert mail sparkpost secret'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty secret should trigger assertion failure.'
         firefly_cfg_mail_mailer: 'sparkpost'
         firefly_cfg_mail_sparkpost_secret: ''
@@ -426,7 +426,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert broadcast driver pusher id'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty id should trigger assertion failure.'
         firefly_cfg_app_broadcast_driver: 'pusher'
         firefly_cfg_pusher_id: ''
@@ -440,7 +440,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert broadcast driver pusher key'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty key should trigger assertion failure.'
         firefly_cfg_app_broadcast_driver: 'pusher'
         firefly_cfg_pusher_id: 'test'
@@ -454,7 +454,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert broadcast driver pusher token'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty token should trigger assertion failure.'
         firefly_cfg_app_broadcast_driver: 'pusher'
         firefly_cfg_pusher_id: ''
@@ -468,7 +468,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert broadcast driver pusher secret'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty secret should trigger assertion failure.'
         firefly_cfg_app_broadcast_driver: 'pusher'
         firefly_cfg_pusher_id: ''
@@ -482,7 +482,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert redis unix socket'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty path should trigger assertion failure.'
         firefly_cfg_redis_scheme: 'unix'
         firefly_cfg_redis_path: ''
@@ -493,7 +493,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert redis tcp host'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty host should trigger assertion failure.'
         firefly_cfg_redis_scheme: 'tcp'
         firefly_cfg_redis_host: ''
@@ -505,7 +505,7 @@
         tasks_from: 'assertions.yml'
       vars:
         test_name: 'Converge | assert redis tcp port'
-        test_role: 'r_pufky.srv.firefly'
+        test_role: 'r_pufky.media.firefly'
         test_fail_message: 'Empty port should trigger assertion failure.'
         firefly_cfg_redis_scheme: 'tcp'
         firefly_cfg_redis_host: 'localhost'

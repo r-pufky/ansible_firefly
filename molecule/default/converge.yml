@@ -3,6 +3,6 @@
   hosts: 'all'
   gather_facts: false
   tasks:
-    - name: 'Converge | apply r_pufky.srv.firefly'
+    - name: 'Converge | apply r_pufky.media.firefly'
       ansible.builtin.include_role:
-        name: 'r_pufky.srv.firefly'
+        name: 'r_pufky.media.firefly'
