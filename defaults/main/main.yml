@@ -31,14 +31,14 @@
 #   RECOMMEND: Only increment PATCH. Never use 'latest'.
 #
 # Values:
-#   {VERSION}: Tagged release to use ('v6.4.2').
+#   {VERSION}: Tagged release to use ('v6.4.4').
 #      latest: Use latest stable release.
 #
-# Default: 'v6.4.2'.
+# Default: 'v6.4.4'.
 #
 # Reference:
 # * https://github.com/firefly-iii/firefly-iii/releases
-firefly_srv_version: 'v6.4.2'
+firefly_srv_version: 'v6.4.4'
 
 # Firefly GPG key ID.
 #

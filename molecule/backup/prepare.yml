@@ -11,20 +11,24 @@
       vars:
         test_name: 'Prepare | create cache'
 
+    - name: 'Prepare | parse test version'
+      ansible.builtin.set_fact:
+        test_version: '6.4.4'
+
     - name: 'Prepare | check cache'
       ansible.builtin.include_role:
         name: 'r_pufky.lib.tests'
         tasks_from: 'cache_url.yml'
       vars:
-        test_name: 'Prepare | cache {{ item }}'
-        test_dest: '{{ item }}'
+        test_name: '{{ "Prepare | cache " ~ test_version }}'
+        test_dest: '{{ "FireflyIII-v" ~ test_version ~ item }}'
         test_url: '{{
             "https://github.com/firefly-iii/firefly-iii/releases/download/" ~
-            "v6.4.2/" ~
-            item
+            "v" ~ test_version ~ "/" ~
+            "FireflyIII-v" ~ test_version ~ item
           }}'
         test_mode: '0640'
       loop:
-        - 'FireflyIII-v6.4.2.tar.gz'
-        - 'FireflyIII-v6.4.2.tar.gz.asc'
-        - 'FireflyIII-v6.4.2.tar.gz.sha256'
+        - '.tar.gz'
+        - '.tar.gz.asc'
+        - '.tar.gz.sha256'

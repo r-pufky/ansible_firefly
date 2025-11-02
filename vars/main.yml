@@ -6,24 +6,22 @@
 # Firefly requires a LEMP stack.
 #
 # Updates:
-# * New MAJOR, MINOR releases should hard branch at version before starting
-#   (e.g. 2.14.x branch).
-# * Keep a separate change log as changes are made, you will not remember all
-#   of them.
+# * Branch for new Debian releases.
+# * KEEP a separate change log as changes are made.
 # * Use bare-metal docs to validate package/process changes.
 # * Update role defaults (includes updating defaults, tasks):
-#   * .env.example
-#
-#       meld \
-#         <(curl -s https://raw.githubusercontent.com/firefly-iii/firefly-iii/refs/tags/{OLD}/.env.example)
-#         <(curl -s https://raw.githubusercontent.com/firefly-iii/firefly-iii/refs/tags/{NEW}/.env.example)
-#
 #   * Use configuration docs to add new variables.
-#   * Use defaults/ to remove any changed/deprecated variables.
-# * Check storage directory in tarball for any new directories.
-# * PHP changes require adding stops for old php{VERSION}-fpm.service.
+#   * Use defaults to remove any changed/deprecated variables.
+#
+#     meld \
+#       <(curl -s https://raw.githubusercontent.com/firefly-iii/firefly-iii/refs/tags/{OLD}/.env.example)
+#       <(curl -s https://raw.githubusercontent.com/firefly-iii/firefly-iii/refs/tags/{NEW}/.env.example)
+#
+#   * Check storage directory in tarball for any new directories.
+#   * PHP changes require adding stops for old php{VERSION}-fpm.service.
 # * Update tests for any changes.
-# * Standard role validation testing (yamllint, ansible-lint, todo, noqa).
+#   * Use BARE VERSION for find and replace to set new version.
+# * Standard role validation testing (yamllint, ansible-lint, to-do, no-qa).
 # * Tag with OS-APP-ROLE version.
 #
 # Reference:
@@ -34,7 +32,7 @@
 # Last time firefly options were validated against a default configuration.
 firefly_role_validate_date: '2025-09-17'
 firefly_role_validate_release: 'trixie'
-firefly_role_validate_version: 'v6.4.2'
+firefly_role_validate_version: 'v6.4.4'
 firefly_role_validate_php_version: '8.4'
 
 ###############################################################################
