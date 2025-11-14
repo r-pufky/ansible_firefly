@@ -13,7 +13,7 @@
 
     - name: 'Prepare | parse test version'
       ansible.builtin.set_fact:
-        test_version: '6.4.4'
+        test_version: '6.4.8'
 
     - name: 'Prepare | check cache'
       ansible.builtin.include_role:
