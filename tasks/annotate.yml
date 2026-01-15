@@ -35,6 +35,30 @@
 # * https://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#argument-spec
 # * https://github.com/ansible/ansible/issues/77159
 
+- name: 'Annotate | DEPRECATED VARIABLES IN USE ⚠'
+  when: >
+    firefly_cfg_geo_enable_external_map is defined or
+    firefly_cfg_currency_enable_exchange_rates is defined or
+    firefly_cfg_currency_enable_external_rates is defined or
+    firefly_cfg_network_valid_url_protocols is defined or
+    firefly_cfg_network_allow_webhooks is defined or
+    firefly_cfg_app_use_running_balance is defined
+  ansible.builtin.fail:
+    msg: |
+      ╭───────────────────────────────────────────────────────────────────╮
+      │                                                                   │
+      │                   DEPRECATED VARIABLES IN USE.                    │
+      │                                                                   │
+      ├───────────────────────────────────────────────────────────────────╯
+      │ The following environment variables have been removed in 6.4.15+:
+      │
+      │ firefly_cfg_geo_enable_external_map ➔ UI only.
+      │ firefly_cfg_currency_enable_exchange_rates ➔ UI only.
+      │ firefly_cfg_currency_enable_external_rates ➔ UI only.
+      │ firefly_cfg_network_valid_url_protocols ➔ UI only.
+      │ firefly_cfg_network_allow_webhooks ➔ UI only.
+      │ firefly_cfg_app_use_running_balance ➔ UI only.
+
 - name: 'Annotate | sanitize & annotate service defaults'
   ansible.builtin.set_fact:  # noqa jinja[spacing] readability.
     _firefly_srv_version: "{{ {} | r_pufky.data.v3(
@@ -367,11 +391,12 @@
     _firefly_cfg_app_use_running_balance: "{{ {} | r_pufky.data.v3(
         section='app',
         key='USE_RUNNING_BALANCE',
-        raw=firefly_cfg_app_use_running_balance,
+        raw=false,
         default=false,
         hint='bool',
         added='6.4.0',
         sensitive=true,
+        deprecated=true,
         order=15
         )
       }}"
@@ -517,20 +542,22 @@
     _firefly_cfg_currency_enable_exchange_rates: "{{ {} | r_pufky.data.v3(
         section='currency',
         key='ENABLE_EXCHANGE_RATES',
-        raw=firefly_cfg_currency_enable_exchange_rates,
+        raw=false,
         default=false,
         hint='bool',
         added='6.4.0',
+        deprecated=true,
         order=1
         )
       }}"
     _firefly_cfg_currency_enable_external_rates: "{{ {} | r_pufky.data.v3(
         section='currency',
         key='ENABLE_EXTERNAL_RATES',
-        raw=firefly_cfg_currency_enable_external_rates,
+        raw=false,
         default=false,
         hint='bool',
         added='6.4.0',
+        deprecated=true,
         order=2
         )
       }}"
@@ -801,10 +828,11 @@
     _firefly_cfg_geo_enable_external_map: "{{ {} | r_pufky.data.v3(
         section='geo',
         key='ENABLE_EXTERNAL_MAP',
-        raw=firefly_cfg_geo_enable_external_map,
+        raw=false,
         default=false,
         hint='bool',
         added='6.4.0',
+        deprecated=true,
         order=1
         )
       }}"
@@ -1138,11 +1166,12 @@
     _firefly_cfg_network_valid_url_protocols: "{{ {} | r_pufky.data.v3(
         section='network',
         key='VALID_URL_PROTOCOLS',
-        raw=firefly_cfg_network_valid_url_protocols,
-        data=firefly_cfg_network_valid_url_protocols | join(','),
+        raw=[],
+        data=[] | join(','),
         default=[],
         hint='list of str',
         added='6.4.0',
+        deprecated=true,
         order=3
         )
       }}"
@@ -1169,10 +1198,11 @@
     _firefly_cfg_network_allow_webhooks: "{{ {} | r_pufky.data.v3(
         section='network',
         key='ALLOW_WEBHOOKS',
-        raw=firefly_cfg_network_allow_webhooks,
+        raw=false,
         default=false,
         hint='bool',
         added='6.4.0',
+        deprecated=true,
         order=6
         )
       }}"

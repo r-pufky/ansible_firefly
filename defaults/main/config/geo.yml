@@ -3,9 +3,6 @@
 # Geolocation and Mapping
 ###############################################################################
 
-# Enable geo locations for transactions? Default: False.
-firefly_cfg_geo_enable_external_map: false
-
 # Default map latitude. Default: 51.983333.
 firefly_cfg_geo_default_lat: 51.983333
 

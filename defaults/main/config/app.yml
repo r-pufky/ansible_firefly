@@ -160,13 +160,6 @@ firefly_cfg_app_demo_username: ''
 # Default: '' (disabled).
 firefly_cfg_app_demo_password: ''
 
-# Enable running balance calculations?
-#
-# Experimental feature. Do NOT enable.
-#
-# Default: False.
-firefly_cfg_app_use_running_balance: false
-
 # Application layout.
 #
 # Values:

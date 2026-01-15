@@ -18,7 +18,7 @@
 
     - name: 'Verify | query storage link'
       ansible.builtin.stat:
-        path: '/opt/firefly/firefly-iii-v6.4.9/storage'
+        path: '/opt/firefly/firefly-iii-v6.4.15/storage'
       register: _firefly_test
 
     - name: 'Verify | assert storage link'

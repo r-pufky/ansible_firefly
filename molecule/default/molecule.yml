@@ -34,21 +34,21 @@ provisioner:
         repo_testing_enable: true
         repo_testing_versions:
           - comment: 'default'
-            version: 'v6.4.9'
+            version: 'v6.4.15'
             asset: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "FireflyIII-v6.4.9.tar.gz"
+                "FireflyIII-v6.4.15.tar.gz"
               }}'
             checksum: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "FireflyIII-v6.4.9.tar.gz.sha256"
+                "FireflyIII-v6.4.15.tar.gz.sha256"
               }}'
             signature: '{{
                 lookup("env", "MOLECULE_PROJECT_DIRECTORY") ~
                 "/molecule/cache/" ~
-                "FireflyIII-v6.4.9.tar.gz.asc"
+                "FireflyIII-v6.4.15.tar.gz.asc"
               }}'
     host_vars:
       firefly-debian-13-user_data:

@@ -510,3 +510,14 @@
         firefly_cfg_redis_scheme: 'tcp'
         firefly_cfg_redis_host: 'localhost'
         firefly_cfg_redis_port: -1
+
+    - name: 'Converge | assert deprecated variables'
+      ansible.builtin.include_role:
+        name: 'r_pufky.lib.tests'
+        tasks_from: 'assertions.yml'
+      vars:
+        test_name: 'Converge | deprecated variables'
+        test_role: 'r_pufky.media.firefly'
+        test_fail_message:
+          'Deprecated variables should trigger assertion failure.'
+        firefly_cfg_app_use_running_balance: true
